@@ -19,6 +19,7 @@ This script is just the install option in [Invidious-Updater](https://github.com
 ## Download the script:
 
 Quick install with default options for localhost:
+
 With Curl:
 ```bash
 curl -sSL https://github.com/tmiland/invidious-installer/raw/main/invidious_installer.sh | bash
