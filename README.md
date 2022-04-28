@@ -16,17 +16,19 @@ Automatic install script for Invidious
 
 This script is just the install option in [Invidious-Updater](https://github.com/tmiland/Invidious-Updater)
 
-## Download the script:
+## Installation
+
+### Download the script:
 
 Quick install with default options for localhost:
 
 With Curl:
 ```bash
-curl -sSL https://github.com/tmiland/invidious-installer/raw/main/invidious_installer.sh | bash
+curl -sSL https://github.com/tmiland/invidious-installer/raw/main/invidious_installer.sh | bash || exit 0
 ```
 With Wget:
 ```bash
-wget -qO - https://github.com/tmiland/invidious-installer/raw/main/invidious_installer.sh | bash
+wget -qO - https://github.com/tmiland/invidious-installer/raw/main/invidious_installer.sh | bash || exit 0
 ```
 
 With custom options:
@@ -37,9 +39,6 @@ Set execute permission:
 ```bash
 chmod +x invidious_installer.sh
 ```
-
-## Installation
-
 
 ### Install with default options to run on localhost:
 
@@ -71,13 +70,6 @@ SWAP_OPTIONS=n \
 
 For Captcha key, add `CAPTCHA_KEY=YOUR_CAPTCHA_KEY \` to options.
 
-#### Check for script update (Default "no")
-
-```bash
-
-$ ./invidious_installer.sh -u
-
-```
 
 ***Note: you will be prompted to enter root password***
 
