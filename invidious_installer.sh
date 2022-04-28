@@ -470,8 +470,8 @@ chk_git_repo() {
     echo -e "${ORANGE}${WARNING} If you want to reinstall, please remove Invidious first!${NC}"
     echo ""
     read_sleep 3
-    indexit
-    #exit 1
+    #indexit
+    exit
   fi
 }
 
