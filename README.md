@@ -68,8 +68,8 @@ SWAP_OPTIONS=n \
 ./invidious_installer.sh
 ```
 
-For Captcha key, add `CAPTCHA_KEY=YOUR_CAPTCHA_KEY \` to options.
-
+- For Captcha key, add `CAPTCHA_KEY=YOUR_CAPTCHA_KEY \` to options.
+- PostgreSQL password will be auto-generated.
 
 ***Note: you will be prompted to enter root password***
 
