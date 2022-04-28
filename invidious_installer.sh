@@ -471,7 +471,7 @@ chk_git_repo() {
     echo ""
     read_sleep 3
     #indexit
-    exit
+    exit 0
   fi
 }
 
