@@ -14,7 +14,7 @@ Automatic install script for Invidious
 
 ## Script to install [Invidious](https://github.com/iv-org/invidious)
 
-This script just the install option in [Invidious-Updater](https://github.com/tmiland/Invidious-Updater)
+This script is just the install option in [Invidious-Updater](https://github.com/tmiland/Invidious-Updater)
 
 ## Download the script:
 
