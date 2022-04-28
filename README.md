@@ -96,8 +96,6 @@ Tested and working on:
 * PureOS (Not tested)
 * CentOS 8
 * Fedora 33
-  * Docker support
-    - [OS requirements](https://docs.docker.com/install/linux/docker-ce/fedora/)
 * Arch Linux
 
 ## Feature request and bug reports
