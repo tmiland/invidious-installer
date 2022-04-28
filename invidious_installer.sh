@@ -381,7 +381,7 @@ show_docker_status() {
 header() {
   echo -e "${GREEN}\n"
   echo ' ╔═══════════════════════════════════════════════════════════════════╗'
-  echo ' ║                        '"${SCRIPT_NAME}"'                      ║'
+  echo ' ║                        '"${SCRIPT_NAME}"'                     ║'
   echo ' ║               Automatic install script for Invidious              ║'
   echo ' ║                      Maintained by @tmiland                       ║'
   echo ' ║                          version: '${VERSION}'                           ║'
