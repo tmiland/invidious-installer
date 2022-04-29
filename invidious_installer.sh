@@ -209,7 +209,7 @@ if [[ $DISTRO_GROUP == "Debian" ]]; then
   # Pre-install packages
   PRE_INSTALL_PKGS="apt-transport-https git curl sudo gnupg"
   # Install packages
-  INSTALL_PKGS="crystal libssl-dev libxml2-dev libyaml-dev libgmp-dev libreadline-dev librsvg2-bin postgresql libsqlite3-dev"
+  INSTALL_PKGS="crystal libssl-dev libxml2-dev libyaml-dev libgmp-dev libreadline-dev librsvg2-bin postgresql libsqlite3-dev zlib1g-dev libpcre3-dev libevent-dev"
   # PostgreSQL Service
   PGSQL_SERVICE="postgresql"
   # System cmd
@@ -224,8 +224,8 @@ elif [[ $(lsb_release -si) == "CentOS" ]]; then
   # Pre-install packages
   PRE_INSTALL_PKGS="epel-release git curl sudo dnf-plugins-core"
   # Install packages
-  INSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel postgresql postgresql-server"
-# PostgreSQL Service
+  INSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel postgresql postgresql-server zlib-devel gcc libevent-devel"
+  # PostgreSQL Service
   PGSQL_SERVICE="postgresql"
   # System cmd
   SYSTEM_CMD="systemctl"
@@ -239,7 +239,7 @@ elif [[ $(lsb_release -si) == "Fedora" ]]; then
   # Pre-install packages
   PRE_INSTALL_PKGS="git curl sudo"
   # Install packages
-  INSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel postgresql postgresql-server"
+  INSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel postgresql postgresql-server zlib-devel gcc libevent-devel"
   # PostgreSQL Service
   PGSQL_SERVICE="postgresql"
   # System cmd
