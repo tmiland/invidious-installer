@@ -280,13 +280,9 @@ usage() {
 
 # Make sure that the script runs with root permissions
 chk_permissions() {
-  if [[ "$EUID" != 0 ]]; then
-    echo -e "${RED}${ERROR} This action needs root permissions."
-    echo -e "${NC}  Please enter your root password...";
-    cd "$CURRDIR" || exit
-    su -s "$(which bash)" -c "./$SCRIPT_FILENAME"
-    cd - > /dev/null || exit
-    exit 0;
+  if [[ $EUID -ne 0 ]]; then
+  	echo -e "Sorry, you need to run this as root"
+  	exit 1
   fi
 }
 
