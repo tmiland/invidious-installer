@@ -113,7 +113,7 @@ CAPTCHA_KEY=${CAPTCHA_KEY:-}
 # Default Swap option
 SWAP_OPTIONS=${SWAP_OPTIONS:-n}
 # Logfile
-LOGFILE=invidious_update.log
+LOGFILE=invidious_installer.log
 
 install_log() {
   exec > >(tee ${LOGFILE}) 2>&1
@@ -831,6 +831,9 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
   fi
   echo -e "${GREEN}${DONE} Finished Database section${NC}"
 
+  if [[ $DISTRO_GROUP == "Arch" ]]; then
+    git config --global --add safe.directory ${REPO_DIR}
+  fi
   update_config
   # Crystal complaining about permissions on CentOS and somewhat Debian
   # So before we build, make sure permissions are set.
