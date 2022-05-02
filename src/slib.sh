@@ -68,6 +68,7 @@ else
   BLUEBG=''
   MAGENTABG=''
   CYANBG=''
+  WHITEBG=''
 
   BOLD=''
   UNDERLINE=''
