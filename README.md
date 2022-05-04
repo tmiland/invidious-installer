@@ -8,13 +8,14 @@ Automatic install script for Invidious
                   ║                      Maintained by @tmiland                       ║
                   ╚═══════════════════════════════════════════════════════════════════╝
 ```
-[![GitHub release](https://img.shields.io/github/release/tmiland/Invidious-Updater.svg?style=for-the-badge)](https://github.com/tmiland/Invidious-Updater/releases)
-[![licence](https://img.shields.io/github/license/tmiland/Invidious-Updater.svg?style=for-the-badge)](https://github.com/tmiland/Invidious-Updater/blob/master/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/tmiland/invidious-installer.svg?style=for-the-badge)](https://github.com/tmiland/invidious-installer/releases)
+[![licence](https://img.shields.io/github/license/tmiland/invidious-installer.svg?style=for-the-badge)](https://github.com/tmiland/invidious-installer/blob/master/LICENSE)
 ![Bash](https://img.shields.io/badge/Language-SH-4EAA25.svg?style=for-the-badge)
 
 ## Script to install [Invidious](https://github.com/iv-org/invidious)
 
 This script is just the install option in [Invidious-Updater](https://github.com/tmiland/Invidious-Updater)
+  - Version 2.0.0 is completely re-written and might be sourced in the future
 
 ## Installation
 
@@ -70,6 +71,14 @@ SWAP_OPTIONS=n \
 
 - For Captcha key, add `CAPTCHA_KEY=YOUR_CAPTCHA_KEY \` to options.
 - PostgreSQL password will be auto-generated.
+- For verbose output, use [ -v ] argument
+- installation log in invidious_installer.log
+- [./src/slib.sh](https://github.com/tmiland/invidious-installer/blob/main/src/slib.sh) function script is sourced remotely if not found locally
+  - This script is a combination of functions for spinners, colors and logging
+    - Source: Spinner: [swelljoe/spinner](https://github.com/swelljoe/spinner)
+    - Source: Run ok: [swelljoe/run_ok](https://github.com/swelljoe/run_ok)
+    - Source: Slog: [swelljoe/slog](https://github.com/swelljoe/slog)
+    - Source: Slib: [virtualmin/slib](https://github.com/virtualmin/slib)
 
 ***Note: you will be prompted to enter root password***
 
