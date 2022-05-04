@@ -17,11 +17,11 @@ Automatic install script for Invidious
 This script is just the install option in [Invidious-Updater](https://github.com/tmiland/Invidious-Updater)
   - Version 2.0.0 is completely re-written and might be sourced in the future
 
+## Installation
+
 <p align="center">
   <img width="600" src="https://cdn.rawgit.com/tmiland/invidious-installer/main/img/invidious_installer.svg?sanitize=true">
 </p>
-
-## Installation
 
 ### Download the script:
 
