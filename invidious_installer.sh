@@ -11,7 +11,7 @@
 ####                   Maintained by @tmiland                     ####
 ######################################################################
 
-VERSION='1.6.3' # Must stay on line 14 for updater to fetch the numbers
+VERSION='2.0.0' # Must stay on line 14 for updater to fetch the numbers
 
 #------------------------------------------------------------------------------#
 #
@@ -185,17 +185,10 @@ success() {
   log_success "$1 Succeeded."
 }
 
-# install_log() {
-#   exec > >(tee ${LOGFILE}) 2>&1
-# }
-
 read_sleep() {
     read -rt "$1" <> <(:) || :
 }
 
-# repoexit() {
-#   cd ${REPO_DIR} 1>/dev/null 2>&1 || exit 1
-# }
 # Start with a clean log
 if [[ -f $LOGFILE ]]; then
   rm $LOGFILE
@@ -340,11 +333,6 @@ if [[ $(lsb_release -si) == "Devuan" ]]; then
     exit 1;
   fi
 fi
-
-# usage() {
-#   echo "script usage: $SCRIPT_FILENAME [-l]"
-#   echo "   [-l] Activate logging"
-# }
 
 # Make sure that the script runs with root permissions
 chk_permissions() {
