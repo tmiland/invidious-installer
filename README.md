@@ -17,6 +17,8 @@ Automatic install script for Invidious
 This script is just the install option in [Invidious-Updater](https://github.com/tmiland/Invidious-Updater)
   - Version 2.0.0 is completely re-written and might be sourced in the future
 
+[![asciicast](https://asciinema.org/a/492012.svg)](https://asciinema.org/a/492012)
+
 ## Installation
 
 ### Download the script:
