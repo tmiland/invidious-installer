@@ -194,7 +194,7 @@ read_sleep() {
 }
 
 # repoexit() {
-#   cd ${REPO_DIR} >/dev/null 2>&1 || exit 1
+#   cd ${REPO_DIR} 1>/dev/null 2>&1 || exit 1
 # }
 # Start with a clean log
 if [[ -f $LOGFILE ]]; then
@@ -238,7 +238,7 @@ case "$DISTRO" in
     ;;
   *) echo -e "${RED}${ERROR} unknown distro: '$DISTRO'${NORMAL}" ; exit 1 ;;
 esac
-if ! lsb_release -si >/dev/null 2>&1; then
+if ! lsb_release -si 1>/dev/null 2>&1; then
   echo ""
   echo -e "${RED}${ERROR} Looks like ${LSB} is not installed!${NORMAL}"
   echo ""
@@ -316,7 +316,7 @@ elif [[ $(lsb_release -si) == "Fedora" ]]; then
   pgsql_config_folder=$(find "/etc/postgresql/" -maxdepth 1 -type d -name "*" | sort -V | tail -1)
 elif [[ $DISTRO_GROUP == "Arch" ]]; then
   SUDO="sudo"
-  UPDATE="pacman -Syu"
+  UPDATE="pacman -Syu --noconfirm --needed"
   INSTALL="pacman -S --noconfirm --needed"
   PKGCHK="pacman -Qs"
   # Pre-install packages
@@ -558,8 +558,8 @@ chk_git_repo() {
 
 # Set permissions
 set_permissions() {
-  ${SUDO} chown -R $USER_NAME:$USER_NAME $USER_DIR >>"${RUN_LOG}" 2>&1
-  ${SUDO} chmod -R 755 $USER_DIR >>"${RUN_LOG}" 2>&1
+  ${SUDO} chown -R $USER_NAME:$USER_NAME $USER_DIR 1>/dev/null 2>&1
+  ${SUDO} chmod -R 755 $USER_DIR 1>/dev/null 2>&1
 }
 
 # Update config
@@ -653,7 +653,7 @@ logrotate_install() {
     minsize 1048576
 }" | ${SUDO} tee /etc/logrotate.d/invidious.logrotate >>"${RUN_LOG}" 2>&1
     chmod 0644 /etc/logrotate.d/invidious.logrotate >>"${RUN_LOG}" 2>&1
-    log_success "Done"
+    log_success "Logrotate configuration Done"
   fi
 }
 
@@ -731,7 +731,7 @@ install_invidious() {
   esac
 
   # Check for localhost in /etc/hosts
-  grep localhost /etc/hosts >/dev/null
+  grep localhost /etc/hosts 1>/dev/null 2>&1
   if [ "$?" != 0 ]; then
     log_warning "There is no localhost entry in /etc/hosts. This is required, so one will be added."
     run_ok "echo 127.0.0.1 localhost >> /etc/hosts" "Editing /etc/hosts"
@@ -743,56 +743,72 @@ install_invidious() {
 
   PSQLDB=$(printf '%s\n' "$PSQLDB" | LC_ALL=C tr '[:upper:]' '[:lower:]')
   log_info "Started installation log in $LOGFILE"
+  echo
   printf "${YELLOW}▣${CYAN}□□□${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}4${NORMAL}: Setup packages\\n"
-  #log_debug "${GREEN}\n"
-  log_debug "Install options: \n"
-  log_debug " ${DONE} branch        : $IN_BRANCH"
-  log_debug " ${DONE} domain        : $DOMAIN"
-  log_debug " ${DONE} ip address    : $IP"
-  log_debug " ${DONE} port          : $PORT"
+  log_info "Install options: "
+  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}branch        : ${NORMAL}${BBLUE}$IN_BRANCH${NORMAL}"
+  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}domain        : ${NORMAL}${BBLUE}$DOMAIN${NORMAL}"
+  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}ip address    : ${NORMAL}${BBLUE}$IP${NORMAL}"
+  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}port          : ${NORMAL}${BBLUE}$PORT${NORMAL}"
   if [ ! -z "$EXTERNAL_PORT" ]; then
-    log_debug " ${DONE} external port : $EXTERNAL_PORT"
+    log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}external port : ${NORMAL}${BBLUE}$EXTERNAL_PORT${NORMAL}"
   fi
-  log_debug " ${DONE} dbname        : $PSQLDB"
-  log_debug " ${DONE} dbpass        : $PSQLPASS"
-  log_debug " ${DONE} https only    : $HTTPS_ONLY"
+  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}dbname        : ${NORMAL}${BBLUE}$PSQLDB${NORMAL}"
+  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}dbpass        : ${NORMAL}${BBLUE}$PSQLPASS${NORMAL}"
+  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}https only    : ${NORMAL}${BBLUE}$HTTPS_ONLY${NORMAL}"
   if [ ! -z "$ADMINS" ]; then
-    log_debug " ${DONE} admins        : $ADMINS"
+    log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}admins        : ${NORMAL}${BBLUE}$ADMINS${NORMAL}"
   fi
   if [ ! -z "$CAPTCHA_KEY" ]; then
-    log_debug " ${DONE} captcha key   : $CAPTCHA_KEY"
+    log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}captcha key   : ${NORMAL}${BBLUE}$CAPTCHA_KEY${NORMAL}"
   fi
-  #log_debug " ${NORMAL}"
-  # echo ""
+  echo
   # echo ""
 
   # Setup Dependencies
   log_debug "Configuring package manager for ${DISTRO_GROUP} .."
-  if ! ${PKGCHK} "$PRE_INSTALL_PKGS" >/dev/null 2>&1; then
-    run_ok "${UPDATE}" "Updating packages"
+  if ! ${PKGCHK} "$PRE_INSTALL_PKGS" 1>/dev/null 2>&1; then
+    log_debug "Updating packages"
+    run_ok "${UPDATE}" "Updating package repo"
     for i in $PRE_INSTALL_PKGS; do
-      run_ok "${INSTALL} $i" "Installing $i" # 2> /dev/null # || exit 1
+      log_debug "Installing pre-install packages $i"
+      ${INSTALL} $i >>"${RUN_LOG}" 2>&1
     done
   fi
 
-  run_ok "get_crystal" "Installing Crystal packages"
+  log_debug "Installing Crystal packages"
+  run_ok "get_crystal" "Installing Crystal"
 
-  if ! ${PKGCHK} "$INSTALL_PKGS" >/dev/null 2>&1; then
-    run_ok "${SUDO} ${UPDATE}" "Updating packages"
+  if ! ${PKGCHK} "$INSTALL_PKGS" 1>/dev/null 2>&1; then
+    log_debug "Updating packages"
+    run_ok "${SUDO} ${UPDATE}" "Updating package repo"
     for i in $INSTALL_PKGS; do
-      run_ok "${SUDO} ${INSTALL} ${i}" "Installing $i" # 2> /dev/null # || exit 1 #--allow-unauthenticated
+      log_debug "Installing required packages $i"
+      ${SUDO} ${INSTALL} ${i} >>"${RUN_LOG}" 2>&1
     done
   fi
-  log_success "Package Setup Success"
+  log_success "Package Setup Finished"
 
+  # Reap any clingy processes (like spinner forks)
+  # get the parent pids (as those are the problem)
+  allpids="$(ps -o pid= --ppid $$) $allpids"
+  for pid in $allpids; do
+    kill "$pid" 1>/dev/null 2>&1
+  done
+
+  # Next step is configuration. Wait here for a moment, hopefully letting any
+  # apt processes disappear before we start, as they're huge and memory is a
+  # problem. XXX This is hacky. I'm not sure what's really causing random fails.
+  read_sleep 1
+  echo
   # Setup Repository
   log_debug "Phase 2 of 4: Repository Configuration"
   printf "${GREEN}▣${YELLOW}▣${CYAN}□□${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}4${NORMAL}: Setup Repository\\n"
   # https://stackoverflow.com/a/51894266
-  # grep $USER_NAME /etc/passwd >/dev/null 2>&1
+  # grep $USER_NAME /etc/passwd 1>/dev/null 2>&1
   # if [ ! $? -eq 0 ] ; then
     #echo -e "${YELLOW}${ARROW} User $USER_NAME Not Found, adding user${NORMAL}"
-  if ! id -u "$USER_NAME" >/dev/null 2>&1; then
+  if ! id -u "$USER_NAME" 1>/dev/null 2>&1; then
     log_debug "Checking if $USER_NAME exists"
     ${SUDO} useradd -m $USER_NAME >>"${RUN_LOG}" 2>&1
   fi
@@ -804,24 +820,38 @@ install_invidious() {
     mkdir -p $USER_DIR >>"${RUN_LOG}" 2>&1
   fi
 
+  log_debug "Setting folder permissions"
   run_ok "set_permissions" "Setting folder permissions"
-  log_debug "Downloading Invidious from GitHub"
-  cd "${USER_DIR}" >>"${RUN_LOG}" 2>&1 || exit 1
-  run_ok "sudo -i -u invidious \
-    git clone https://github.com/iv-org/invidious" "Cloning Invidious from GitHub"
-  cd "${REPO_DIR}" >>"${RUN_LOG}" 2>&1 || exit 1
-  # Checkout
-  run_ok "GetMaster" "Checking out master branch"
-  log_debug "Download Done"
-  run_ok "set_permissions" "Setting folder permissions again to be sure"
-  log_success "Repository Setup Success"
-  cd - >/dev/null 2>&1 || exit
+  if [ -d "$USER_DIR" ]; then
+    (
+      cd "$USER_DIR" || exit 1
 
+    log_debug "Downloading Invidious from GitHub"
+    run_ok "sudo -i -u invidious \
+      git clone https://github.com/iv-org/invidious" "Cloning Invidious from GitHub"
+      cd - 1>/dev/null 2>&1 || exit 1
+    )
+  fi
+  if [ -d "$REPO_DIR" ]; then
+    (
+      cd "$REPO_DIR" || exit 1
+
+      # Checkout
+      log_debug "Checking out master branch"
+      run_ok "GetMaster" "Checking out master branch"
+      log_debug "Setting folder permissions again to be sure"
+      run_ok "set_permissions" "Setting folder permissions again to be sure"
+      log_success "Repository Setup Finished"
+      cd - 1>/dev/null 2>&1 || exit 1
+    )
+  fi
+
+  echo
   # Setup Repository
   log_debug "Phase 3 of 4: Database Configuration"
   printf "${GREEN}▣▣${YELLOW}▣${CYAN}□${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}4${NORMAL}: Setup Database\\n"
   if [[ $DISTRO_GROUP == "RHEL" ]]; then
-    if ! ${PKGCHK} ${PGSQL_SERVICE} >/dev/null 2>&1; then
+    if ! ${PKGCHK} ${PGSQL_SERVICE} 1>/dev/null 2>&1; then
       if [[ $(lsb_release -si) == "CentOS" ]]; then
         ${SUDO} yum config-manager --set-enabled powertools >>"${RUN_LOG}" 2>&1
         ${SUDO} dnf --enablerepo=powertools install libyaml-devel >>"${RUN_LOG}" 2>&1
@@ -896,8 +926,9 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
       ${SUDO} -i -u postgres PGPASSWORD="$PSQLPASS" psql -U kemal -d "$PSQLDB" -f "$file" >>"${RUN_LOG}" 2>&1
     done
   fi
-  log_success "Database Setup Success"
+  log_success "Database Setup Finished"
 
+  echo
   log_debug "Phase 4 of 4: Invidious Configuration"
   printf "${GREEN}▣▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}4${NORMAL} of ${GREEN}4${NORMAL}: Setup Invidious\\n"
   if [[ $DISTRO_GROUP == "Arch" ]]; then
@@ -907,9 +938,14 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
   # Crystal complaining about permissions on CentOS and somewhat Debian
   # So before we build, make sure permissions are set.
   run_ok "set_permissions" "Setting folder permissions"
-  cd ${REPO_DIR} >/dev/null 2>&1 || exit 1
-  run_ok "shards install --production" "Running shards install"
-  run_ok "crystal build src/invidious.cr --release" "Running crystal build"
+  if [[ -d ${REPO_DIR} ]]; then
+    (
+      cd ${REPO_DIR} 1>/dev/null 2>&1 || exit 1
+      run_ok "shards install --production" "Running shards install"
+      run_ok "crystal build src/invidious.cr --release" "Running crystal build"
+      cd - 1>/dev/null 2>&1 || exit 1
+    )
+  fi
   #check_exit_status
   if [[ $DISTRO_GROUP == "RHEL" ]]; then
     # Set SELinux to permissive on RHEL
@@ -919,19 +955,31 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
   # Not figured out why yet, so let's set permissions after as well...
   run_ok "set_permissions" "Setting folder permissions again to be sure"
   run_ok "logrotate_install" "Adding logrotate configuration"
-  log_success "${GREEN}▣▣▣▣${NORMAL} All phases finished successfully"
+  log_success "Invidious Setup Finished"
   # Make sure the cursor is back (if spinners misbehaved)
   tput cnorm
-  read_sleep 5
-  show_install_banner
-  read_sleep 5
-  #indexit
+  printf "${GREEN}▣▣▣▣${NORMAL} All ${GREEN}4${NORMAL} phases finished successfully"
 }
 
 # Start Script
   chk_permissions
   show_banner
 # Install Invidious
+  errors=$((0))
   install_invidious
+  if [ "$?" != "0" ]; then
+    errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Invidious installation returned an error.\\n"
+    errors=$((errors + 1))
+  fi
+  if [ $errors -eq "0" ]; then
+    read_sleep 5
+    show_install_banner
+    read_sleep 5
+    #indexit
+  else
+    log_warning "The following errors occurred during installation:"
+    echo
+    printf "${errorlist}"
+  fi
   exit_script
   exit
