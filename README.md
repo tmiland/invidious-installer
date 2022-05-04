@@ -18,7 +18,7 @@ This script is just the install option in [Invidious-Updater](https://github.com
   - Version 2.0.0 is completely re-written and might be sourced in the future
 
 <p align="center">
-  <img src="https://tmiland/invidious-installer/blob/main/img/invidious_installer.svg?sanitize=true" width="572" alt="invidious installer">
+  <img width="600" src="https://cdn.rawgit.com/tmiland/invidious-installer/main/img/invidious_installer.svg?sanitize=true">
 </p>
 
 ## Installation
