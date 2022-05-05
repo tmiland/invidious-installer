@@ -1,3 +1,1 @@
 theme: jekyll-theme-hacker
-- name: sh-checker
-  uses: luizm/action-sh-checker@v0.4.0
