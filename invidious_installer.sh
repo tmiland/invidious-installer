@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2059
+# shellcheck disable=SC2059,SC1091,SC2166,SC2015,SC2129
 
 ## Author: Tommy Miland (@tmiland) - Copyright (c) 2022
 
@@ -11,7 +11,7 @@
 ####                   Maintained by @tmiland                     ####
 ######################################################################
 
-VERSION='2.0.0' # Must stay on line 14 for updater to fetch the numbers
+VERSION='2.0.1' # Must stay on line 14 for updater to fetch the numbers
 
 #------------------------------------------------------------------------------#
 #
@@ -55,8 +55,6 @@ if [ -z "$sfp" ]; then sfp=${BASH_SOURCE[0]}; fi
 #SCRIPT_DIR=$(dirname "${sfp}")
 # Icons used for printing
 ARROW='➜'
-DONE='✔'
-ERROR='✗'
 #WARNING='⚠'
 # Repo name
 REPO_NAME="tmiland/invidious-installer"
@@ -98,6 +96,8 @@ SWAP_OPTIONS=${SWAP_OPTIONS:-n}
 LOGFILE=invidious_installer.log
 # Console output level; ignore debug level messages.
 VERBOSE=0
+#
+BANNERS=1
 
 usage() {
   # shellcheck disable=SC2046
@@ -107,6 +107,7 @@ usage() {
   echo
   printf "  ${YELLOW}--help|-h${NORMAL}               display this help and exit\\n"
   printf "  ${YELLOW}--verbose|-v${NORMAL}            increase verbosity\\n"
+  printf "  ${YELLOW}--banners|-b${NORMAL}            disable banners\\n"
   echo
 }
 
@@ -120,6 +121,10 @@ while [ $# != 0 ]; do
     shift
     VERBOSE=1
     ;;
+  --banners | -b)
+    shift
+    BANNERS=0
+    ;;
   *)
     printf "Unrecognized option: $1\\n\\n"
     usage
@@ -132,15 +137,15 @@ done
 if [[ -f ./src/slib.sh ]]; then
   . ./src/slib.sh
 else
-  SLIB_URL=https://github.com/tmiland/invidious-installer/raw/main/scr/slib.sh
+  SLIB_URL=https://raw.githubusercontent.com/tmiland/invidious-installer/main/src/slib.sh
   if [[ $(command -v 'curl') ]]; then
-    # shellcheck disable=SC1090
+    # shellcheck source=$SLIB_URL
     source <(curl -sSLf $SLIB_URL)
   elif [[ $(command -v 'wget') ]]; then
-    # shellcheck disable=SC1090
+    # shellcheck source=$SLIB_URL
     . <(wget -qO - $SLIB_URL)
   else
-    echo -e "${RED}${ERROR} This script requires curl or wget.\nProcess aborted${NORMAL}"
+    echo -e "${RED}${BALLOT_X} This script requires curl or wget.\nProcess aborted${NORMAL}"
     exit 0
   fi
 fi
@@ -186,27 +191,30 @@ success() {
 }
 
 read_sleep() {
-    read -rt "$1" <> <(:) || :
+  read -rt "$1" <> <(:) || :
 }
 
 # Start with a clean log
 if [[ -f $LOGFILE ]]; then
   rm $LOGFILE
 fi
+
 # Distro support
 ARCH_CHK=$(uname -m)
 if [ ! "${ARCH_CHK}" == 'x86_64' ]; then
-  echo -e "${RED}${ERROR} Error: Sorry, your OS ($ARCH_CHK) is not supported.${NORMAL}"
+  echo -e "${RED}${BALLOT_X} Error: Sorry, your OS ($ARCH_CHK) is not supported.${NORMAL}"
   exit 1;
 fi
+
 shopt -s nocasematch
-  if [[ -f /etc/debian_version ]]; then
-    DISTRO=$(cat /etc/issue.net)
-  elif [[ -f /etc/redhat-release ]]; then
-    DISTRO=$(cat /etc/redhat-release)
-  elif [[ -f /etc/os-release ]]; then
-    DISTRO=$(cat < /etc/os-release | grep "PRETTY_NAME" | sed 's/PRETTY_NAME=//g' | sed 's/["]//g' | awk '{print $1}')
-  fi
+if [[ -f /etc/debian_version ]]; then
+  DISTRO=$(cat /etc/issue.net)
+elif [[ -f /etc/redhat-release ]]; then
+  DISTRO=$(cat /etc/redhat-release)
+elif [[ -f /etc/os-release ]]; then
+  DISTRO=$(cat < /etc/os-release | grep "PRETTY_NAME" | sed 's/PRETTY_NAME=//g' | sed 's/["]//g' | awk '{print $1}')
+fi
+
 case "$DISTRO" in
   Debian*|Ubuntu*|LinuxMint*|PureOS*|Pop*|Devuan*)
     # shellcheck disable=SC2140
@@ -229,19 +237,19 @@ case "$DISTRO" in
     LSB=lsb-release
     DISTRO_GROUP=Arch
     ;;
-  *) echo -e "${RED}${ERROR} unknown distro: '$DISTRO'${NORMAL}" ; exit 1 ;;
+  *) echo -e "${RED}${BALLOT_X} unknown distro: '$DISTRO'${NORMAL}" ; exit 1 ;;
 esac
 if ! lsb_release -si 1>/dev/null 2>&1; then
   echo ""
-  echo -e "${RED}${ERROR} Looks like ${LSB} is not installed!${NORMAL}"
+  echo -e "${RED}${BALLOT_X} Looks like ${LSB} is not installed!${NORMAL}"
   echo ""
   read -r -p "Do you want to download ${LSB}? [y/n]? " ANSWER
   echo ""
   case $ANSWER in
     [Yy]* )
       echo -e "${GREEN}${ARROW} Installing ${LSB} on ${DISTRO}...${NORMAL}"
-      su -s "$(which bash)" -c "${PKGCMD} ${LSB}" || echo -e "${RED}${ERROR} Error: could not install ${LSB}!${NORMAL}"
-      echo -e "${GREEN}${DONE} Done${NORMAL}"
+      su -s "$(which bash)" -c "${PKGCMD} ${LSB}" || echo -e "${RED}${BALLOT_X} Error: could not install ${LSB}!${NORMAL}"
+      echo -e "${GREEN}${CHECK} Done${NORMAL}"
       read_sleep 3
       #indexit
       ;;
@@ -323,28 +331,32 @@ elif [[ $DISTRO_GROUP == "Arch" ]]; then
   # Postgresql config folder
   pgsql_config_folder="/var/lib/postgres/data"
 else
-  echo -e "${RED}${ERROR} Error: Sorry, your OS is not supported.${NORMAL}"
+  echo -e "${RED}${BALLOT_X} Error: Sorry, your OS is not supported.${NORMAL}"
   exit 1;
 fi
+
 # Check if systemd is installed on Devuan
 if [[ $(lsb_release -si) == "Devuan" ]]; then
   if ( ! $SYSTEM_CMD 2>/dev/null); then
-    echo -e "${RED}${ERROR} Error: Sorry, you need systemd to run this script.${NORMAL}"
+    echo -e "${RED}${BALLOT_X} Error: Sorry, you need systemd to run this script.${NORMAL}"
     exit 1;
   fi
 fi
 
 # Make sure that the script runs with root permissions
 chk_permissions() {
+
   if [[ $EUID -ne 0 ]]; then
   	echo -e "Sorry, you need to run this as root"
   	exit 1
   fi
+
 }
 
 ADD_SWAP_URL=https://raw.githubusercontent.com/tmiland/swap-add/master/swap-add.sh
 
 add_swap() {
+
   if [[ $(command -v 'curl') ]]; then
     # shellcheck disable=SC1090
     source <(curl -sSLf $ADD_SWAP_URL)
@@ -352,11 +364,11 @@ add_swap() {
     # shellcheck disable=SC1090
     . <(wget -qO - $ADD_SWAP_URL)
   else
-    echo -e "${RED}${ERROR} This script requires curl or wget.\nProcess aborted${NORMAL}"
+    echo -e "${RED}${BALLOT_X} This script requires curl or wget.\nProcess aborted${NORMAL}"
     exit 0
   fi
   read_sleep 3
-  #indexit
+
 }
 ## get total free memory size in megabytes(MB)
 free=$(free -mt | grep Total | awk '{print $4}')
@@ -374,10 +386,10 @@ fi
 
 # Show service status - @FalconStats
 show_status() {
-    declare -a services=(
-      "invidious"
-      "postgresql"
-      )
+  declare -a services=(
+    "invidious"
+    "postgresql"
+    )
   #fi
   declare -a serviceName=(
     "Invidious"
@@ -404,47 +416,12 @@ show_status() {
   done
 
   echo -e "$line"
+
 }
 
 if ( $SYSTEM_CMD -q is-active ${SERVICE_NAME}); then
   SHOW_STATUS=$(show_status)
 fi
-
-# Show Docker Status
-show_docker_status() {
-
-  declare -a container=(
-    "invidious_invidious_1"
-    "invidious_postgres_1"
-  )
-  declare -a containerName=(
-    "Invidious"
-    "PostgreSQL"
-  )
-  declare -a status=()
-
-  echo ""
-  echo "Docker Status:"
-
-  running_containers="$( docker ps )"
-  for container_name in "${container[@]}"
-  do
-    #status+=($(docker ps "$container_name"))
-    status+=("$( echo -n "$running_containers" | grep -oP "(?<= )$container_name$" | wc -l )")
-  done
-
-  for i in "${!status[@]}"
-  do
-    # shellcheck disable=SC2128
-    if [[ "$status"  = "1" ]] ; then
-      line+="${containerName[$i]}: ${GREEN}● running${NORMAL} "
-    else
-      line+="${containerName[$i]}: ${RED}▲ stopped${NORMAL} "
-    fi
-  done
-
-  echo -e "$line"
-}
 
 # BANNERS
 
@@ -482,7 +459,7 @@ show_install_banner() {
   echo ""
   echo ""
   echo ""
-  echo -e "${GREEN}${DONE} Invidious install done.${NORMAL} Now visit http://${IP}:${PORT}"
+  echo -e "${GREEN}${CHECK} Invidious install done.${NORMAL} Now visit http://${IP}:${PORT}"
   echo ""
   echo ""
   echo ""
@@ -521,8 +498,8 @@ exit_script() {
   echo -e "
    This script runs on coffee ☕
 
-   ${GREEN}${DONE}${NORMAL} ${BBLUE}Paypal${NORMAL} ${ARROW} ${YELLOW}https://paypal.me/milanddata${NORMAL}
-   ${GREEN}${DONE}${NORMAL} ${BBLUE}BTC${NORMAL}    ${ARROW} ${YELLOW}33mjmoPxqfXnWNsvy8gvMZrrcG3gEa3YDM${NORMAL}
+   ${GREEN}${CHECK}${NORMAL} ${BBLUE}Paypal${NORMAL} ${ARROW} ${YELLOW}https://paypal.me/milanddata${NORMAL}
+   ${GREEN}${CHECK}${NORMAL} ${BBLUE}BTC${NORMAL}    ${ARROW} ${YELLOW}33mjmoPxqfXnWNsvy8gvMZrrcG3gEa3YDM${NORMAL}
   "
   echo -e "Documentation for this script is available here: ${YELLOW}\n${ARROW} https://github.com/tmiland/${REPO_NAME}${NORMAL}\n"
   echo -e "${YELLOW}${ARROW} Goodbye.${NORMAL} ☺"
@@ -531,6 +508,7 @@ exit_script() {
 
 # Check Git repo
 chk_git_repo() {
+
   # Check if the folder is a git repo
   if [[ -d "${REPO_DIR}/.git" ]]; then
     echo ""
@@ -542,6 +520,7 @@ chk_git_repo() {
     #indexit
     exit 0
   fi
+
 }
 
 # Set permissions
@@ -574,10 +553,9 @@ update_config() {
   TFILE="/tmp/config.yml"
   [ ! -d $BPATH ] && mkdir -p $BPATH || :
   for f in $DPATH
-  do # shellcheck disable=SC2166
+  do
     if [ -f $f -a -r $f ]; then
       /bin/cp -f $f $BPATH
-      echo -e "${GREEN}${ARROW} Updating config.yml with new info...${NORMAL}"
       # Add external_port: to config on line 13
       sed -i "11i\external_port:" "$f" > $TFILE
       sed -i "12i\check_tables: true" "$f" > $TFILE
@@ -595,8 +573,6 @@ update_config() {
 
   if [[ -e $TFILE ]]; then
     /bin/rm $TFILE >>"${RUN_LOG}" 2>&1
-  else
-    log_success "Done."
   fi
   # Done updating config.yml with new info!
   # Source: https://www.cyberciti.biz/faq/unix-linux-replace-string-words-in-many-files/
@@ -604,6 +580,7 @@ update_config() {
 
 # Systemd install
 systemd_install() {
+
   # Setup Systemd Service
   shopt -s nocasematch
   if [[ $DISTRO_GROUP == "RHEL" ]]; then
@@ -619,17 +596,17 @@ systemd_install() {
   ${SUDO} $SYSTEM_CMD start ${SERVICE_NAME} >>"${RUN_LOG}" 2>&1
   if ( $SYSTEM_CMD -q is-active ${SERVICE_NAME})
   then
-    log_success "Invidious service has been successfully installed!"
     ${SUDO} $SYSTEM_CMD status ${SERVICE_NAME} --no-pager >>"${RUN_LOG}" 2>&1
     read_sleep 5
   else
-    log_fatal "Invidious service installation failed..."
     ${SUDO} journalctl -u ${SERVICE_NAME} >>"${RUN_LOG}" 2>&1
     read_sleep 5
   fi
+
 }
 
 logrotate_install() {
+
   if [ -d /etc/logrotate.d ]; then
     echo "Adding logrotate configuration..."
     echo "/home/invidious/invidious/invidious.log {
@@ -641,12 +618,13 @@ logrotate_install() {
     minsize 1048576
 }" | ${SUDO} tee /etc/logrotate.d/invidious.logrotate >>"${RUN_LOG}" 2>&1
     chmod 0644 /etc/logrotate.d/invidious.logrotate >>"${RUN_LOG}" 2>&1
-    log_success "Logrotate configuration Done"
   fi
+
 }
 
 # Get Crystal
 get_crystal() {
+
   shopt -s nocasematch
   if [[ $DISTRO_GROUP == "Debian" ]]; then
     if [[ ! -e /etc/apt/sources.list.d/crystal.list ]]; then
@@ -664,10 +642,12 @@ get_crystal() {
     log_fatal "Error: Sorry, your OS is not supported."
     exit 1;
   fi
+
 }
 
 # Create new config.yml
 create_config() {
+
 if [ ! -f "$IN_CONFIG" ]; then
   echo "channel_threads: 1
 feed_threads: 1
@@ -681,6 +661,7 @@ full_refresh: false
 https_only: false
 domain:" | ${SUDO} tee ${IN_CONFIG} >>"${RUN_LOG}" 2>&1
 fi
+
 }
 
 # Backup config file
@@ -704,8 +685,9 @@ GetMaster() {
 install_invidious() {
 
   chk_git_repo
-
+if [ "$BANNERS" = "1" ]; then
   show_preinstall_banner
+fi
 
   case $HTTPS_ONLY in
     [Yy]* )
@@ -718,37 +700,29 @@ install_invidious() {
       ;;
   esac
 
-  # Check for localhost in /etc/hosts
-  grep localhost /etc/hosts 1>/dev/null 2>&1
-  if [ "$?" != 0 ]; then
-    log_warning "There is no localhost entry in /etc/hosts. This is required, so one will be added."
-    run_ok "echo 127.0.0.1 localhost >> /etc/hosts" "Editing /etc/hosts"
-    if [ "$?" -ne 0 ]; then
-      log_error "Failed to configure a localhost entry in /etc/hosts."
-      log_error "This may cause problems, but we'll try to continue."
-    fi
-  fi
-
   PSQLDB=$(printf '%s\n' "$PSQLDB" | LC_ALL=C tr '[:upper:]' '[:lower:]')
   log_info "Started installation log in $LOGFILE"
   echo
   printf "${YELLOW}▣${CYAN}□□□${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}4${NORMAL}: Setup packages\\n"
   log_info "Install options: "
-  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}branch        : ${NORMAL}${BBLUE}$IN_BRANCH${NORMAL}"
-  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}domain        : ${NORMAL}${BBLUE}$DOMAIN${NORMAL}"
-  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}ip address    : ${NORMAL}${BBLUE}$IP${NORMAL}"
-  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}port          : ${NORMAL}${BBLUE}$PORT${NORMAL}"
-  if [ ! -z "$EXTERNAL_PORT" ]; then
-    log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}external port : ${NORMAL}${BBLUE}$EXTERNAL_PORT${NORMAL}"
+  log_info " ${GREEN}${CHECK}${NORMAL} ${YELLOW}branch${NORMAL}        : ${BBLUE}$IN_BRANCH${NORMAL}"
+  log_info " ${GREEN}${CHECK}${NORMAL} ${YELLOW}domain${NORMAL}        : ${BBLUE}$DOMAIN${NORMAL}"
+  log_info " ${GREEN}${CHECK}${NORMAL} ${YELLOW}ip address${NORMAL}    : ${BBLUE}$IP${NORMAL}"
+  log_info " ${GREEN}${CHECK}${NORMAL} ${YELLOW}port${NORMAL}          : ${BBLUE}$PORT${NORMAL}"
+  if [ -n "$EXTERNAL_PORT" ]; then
+    log_info " ${GREEN}${CHECK}${NORMAL} ${YELLOW}external port${NORMAL} : ${BBLUE}$EXTERNAL_PORT${NORMAL}"
   fi
-  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}dbname        : ${NORMAL}${BBLUE}$PSQLDB${NORMAL}"
-  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}dbpass        : ${NORMAL}${BBLUE}$PSQLPASS${NORMAL}"
-  log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}https only    : ${NORMAL}${BBLUE}$HTTPS_ONLY${NORMAL}"
-  if [ ! -z "$ADMINS" ]; then
-    log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}admins        : ${NORMAL}${BBLUE}$ADMINS${NORMAL}"
+
+  log_info " ${GREEN}${CHECK}${NORMAL} ${YELLOW}dbname${NORMAL}        : ${BBLUE}$PSQLDB${NORMAL}"
+  log_info " ${GREEN}${CHECK}${NORMAL} ${YELLOW}dbpass${NORMAL}        : ${BBLUE}$PSQLPASS${NORMAL}"
+  log_info " ${GREEN}${CHECK}${NORMAL} ${YELLOW}https only${NORMAL}    : ${BBLUE}$HTTPS_ONLY${NORMAL}"
+
+  if [ -n "$ADMINS" ]; then
+    log_info " ${GREEN}${CHECK}${NORMAL} ${YELLOW}admins${NORMAL}        : ${BBLUE}$ADMINS${NORMAL}"
   fi
-  if [ ! -z "$CAPTCHA_KEY" ]; then
-    log_info " ${GREEN}${DONE}${NORMAL} ${YELLOW}captcha key   : ${NORMAL}${BBLUE}$CAPTCHA_KEY${NORMAL}"
+
+  if [ -n "$CAPTCHA_KEY" ]; then
+    log_info " ${GREEN}${CHECK}${NORMAL} ${YELLOW}captcha key${NORMAL}   : ${BBLUE}$CAPTCHA_KEY${NORMAL}"
   fi
   echo
   # echo ""
@@ -760,6 +734,7 @@ install_invidious() {
     run_ok "${UPDATE}" "Updating package repo"
     for i in $PRE_INSTALL_PKGS; do
       log_debug "Installing pre-install packages $i"
+      # shellcheck disable=SC2086
       ${INSTALL} $i >>"${RUN_LOG}" 2>&1
     done
   fi
@@ -772,6 +747,7 @@ install_invidious() {
     run_ok "${SUDO} ${UPDATE}" "Updating package repo"
     for i in $INSTALL_PKGS; do
       log_debug "Installing required packages $i"
+      # shellcheck disable=SC2086
       ${SUDO} ${INSTALL} ${i} >>"${RUN_LOG}" 2>&1
     done
   fi
@@ -810,9 +786,10 @@ install_invidious() {
 
   log_debug "Setting folder permissions"
   run_ok "set_permissions" "Setting folder permissions"
-  if [ -d "$USER_DIR" ]; then
+
+  if [ -d $USER_DIR ]; then
     (
-      cd "$USER_DIR" || exit 1
+      cd $USER_DIR >>"${RUN_LOG}" 2>&1 || exit 1
 
     log_debug "Downloading Invidious from GitHub"
     run_ok "sudo -i -u invidious \
@@ -820,9 +797,10 @@ install_invidious() {
       cd - 1>/dev/null 2>&1 || exit 1
     )
   fi
-  if [ -d "$REPO_DIR" ]; then
+
+  if [ -d $REPO_DIR ]; then
     (
-      cd "$REPO_DIR" || exit 1
+      cd $REPO_DIR >>"${RUN_LOG}" 2>&1 || exit 1
 
       # Checkout
       log_debug "Checking out master branch"
@@ -838,6 +816,7 @@ install_invidious() {
   # Setup Repository
   log_debug "Phase 3 of 4: Database Configuration"
   printf "${GREEN}▣▣${YELLOW}▣${CYAN}□${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}4${NORMAL}: Setup Database\\n"
+
   if [[ $DISTRO_GROUP == "RHEL" ]]; then
     if ! ${PKGCHK} ${PGSQL_SERVICE} 1>/dev/null 2>&1; then
       if [[ $(lsb_release -si) == "CentOS" ]]; then
@@ -879,6 +858,7 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
       ${SUDO} chmod 600 /var/lib/pgsql/data/pg_hba.conf >>"${RUN_LOG}" 2>&1
     fi
   fi
+
   if [[ $DISTRO_GROUP == "Arch" ]]; then
     if [[ ! -d /var/lib/postgres/data ]]; then
       log_debug "Adding ${pgsql_config_folder}"
@@ -894,6 +874,7 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
     log_debug "Editing pg_hba.conf to allow login"
     ${SUDO} -u postgres sed -i "s/local   all             all                                     peer/local   all             all                                     md5/g" ${pgsql_config_folder}/main/pg_hba.conf >>"${RUN_LOG}" 2>&1
   fi
+
   log_debug "Enabling ${PGSQL_SERVICE}"
   run_ok "${SUDO} $SYSTEM_CMD enable ${PGSQL_SERVICE}" "Enabling ${PGSQL_SERVICE}"
   read_sleep 1
@@ -907,6 +888,7 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
   ${SUDO} -u postgres psql -c "CREATE DATABASE $PSQLDB WITH OWNER kemal;" >>"${RUN_LOG}" 2>&1
   log_debug "Grant all on database $PSQLDB to user kemal"
   ${SUDO} -u postgres psql -c "GRANT ALL ON DATABASE $PSQLDB TO kemal;" >>"${RUN_LOG}" 2>&1
+
   # Import db files
   if [[ -d ${REPO_DIR}/config/sql ]]; then
     for file in "${REPO_DIR}"/config/sql/*; do
@@ -914,36 +896,54 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
       ${SUDO} -i -u postgres PGPASSWORD="$PSQLPASS" psql -U kemal -d "$PSQLDB" -f "$file" >>"${RUN_LOG}" 2>&1
     done
   fi
+
   log_success "Database Setup Finished"
 
   echo
   log_debug "Phase 4 of 4: Invidious Configuration"
   printf "${GREEN}▣▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}4${NORMAL} of ${GREEN}4${NORMAL}: Setup Invidious\\n"
+
   if [[ $DISTRO_GROUP == "Arch" ]]; then
     git config --global --add safe.directory ${REPO_DIR} >>"${RUN_LOG}" 2>&1
   fi
+
+  log_debug "Update config"
   run_ok "update_config" "Updating config"
   # Crystal complaining about permissions on CentOS and somewhat Debian
   # So before we build, make sure permissions are set.
+  log_debug "Set folder permissions"
   run_ok "set_permissions" "Setting folder permissions"
+
   if [[ -d ${REPO_DIR} ]]; then
     (
-      cd ${REPO_DIR} 1>/dev/null 2>&1 || exit 1
+      cd ${REPO_DIR} >>"${RUN_LOG}" 2>&1 || exit 1
+      log_debug "Run shards install"
       run_ok "shards install --production" "Running shards install"
+      log_debug "Run crystal build"
       run_ok "crystal build src/invidious.cr --release" "Running crystal build"
       cd - 1>/dev/null 2>&1 || exit 1
     )
   fi
-  #check_exit_status
+
   if [[ $DISTRO_GROUP == "RHEL" ]]; then
     # Set SELinux to permissive on RHEL
-    ${SUDO} setenforce 0 >>"${RUN_LOG}" 2>&1
+    #${SUDO} setenforce 0 >>"${RUN_LOG}" 2>&1
+    if [ -x /usr/sbin/setenforce ]; then
+      log_debug "Disabling SELinux during installation .."
+      if ${SUDO} /usr/sbin/setenforce 0 1>/dev/null 2>&1; then
+        log_debug " setenforce 0 succeeded"
+      else
+        log_debug " setenforce 0 failed: $?"
+      fi
+    fi
   fi
+
   run_ok "systemd_install" "Installing Invidious Service"
   # Not figured out why yet, so let's set permissions after as well...
   run_ok "set_permissions" "Setting folder permissions again to be sure"
   run_ok "logrotate_install" "Adding logrotate configuration"
   log_success "Invidious Setup Finished"
+
   # Make sure the cursor is back (if spinners misbehaved)
   tput cnorm
   printf "${GREEN}▣▣▣▣${NORMAL} All ${GREEN}4${NORMAL} phases finished successfully"
@@ -951,17 +951,20 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
 
 # Start Script
   chk_permissions
+if [ "$BANNERS" = "1" ]; then
   show_banner
+fi
 # Install Invidious
   errors=$((0))
-  install_invidious
-  if [ "$?" != "0" ]; then
+  if ! install_invidious; then
     errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Invidious installation returned an error.\\n"
     errors=$((errors + 1))
   fi
   if [ $errors -eq "0" ]; then
     read_sleep 5
-    show_install_banner
+    if [ "$BANNERS" = "1" ]; then
+      show_install_banner
+    fi
     read_sleep 5
     #indexit
   else
