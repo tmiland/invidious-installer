@@ -6,10 +6,11 @@
 # Licensed under the BSD 3 clause license
 # http://github.com/virtualmin/slib
 #------------------------------------------------------------------------------
+# shellcheck disable=SC2034,SC2059
 cleanup () {
   # Make super duper sure we reap all the spinners
   # This is ridiculous, and I still don't know why spinners stick around.
-  if [ ! -z "$allpids" ]; then
+  if [ -n "$allpids" ]; then
     for pid in $allpids; do
       kill "$pid" 1>/dev/null 2>&1
     done
@@ -127,7 +128,15 @@ fi
 # text will come out the other side!
 prepare_log_for_nonterminal() {
     # Essentially this strips all the control characters for log colors
-    sed "s/[[:cntrl:]]\\[[0-9;]*m//g"
+    # sed "s/[[:cntrl:]]\\[[0-9;]*m//g"
+    # The above doesn't strip everything
+    # To break down the sed command,
+    # the \x1B is the escape character that starts a control sequence:
+    # Ctrl-[ . A control sequence ends with an m,
+    # so we find every character that is NOT an m,
+    # and the m that follows: [^m]*m.
+    # Source: https://stackoverflow.com/a/44274479
+    sed "s/\x1B[^m]*m//g"
 }
 
 log() {
@@ -177,9 +186,11 @@ log() {
   # shellcheck disable=SC2154
   if [ "$log_level_log" -le "$log_level_int" ]; then
     # LOG_PATH minus fancypants colors
-    if [ ! -z "$LOG_PATH" ]; then
+    if [ -n "$LOG_PATH" ]; then
       today=$(date +"%Y-%m-%d %H:%M:%S %Z")
-      printf "[%s] [%s] %s\\n" "$today" "$log_level" "$log_text" >> "$LOG_PATH"
+      printf "[%s] [%s] %s\\n" "$today" "$log_level" "$log_text" |
+      # Lets prepare the log for non-terminal
+      prepare_log_for_nonterminal >> "$LOG_PATH"
     fi
   fi
 
@@ -246,7 +257,7 @@ spinner () {
       # always available, but seems to not break things, when not.
       env sleep .2
       # Check to be sure parent is still going; handles sighup/kill
-      if [ ! -z "$SPINNER_PPID" ]; then
+      if [ -n "$SPINNER_PPID" ]; then
         # This is ridiculous. ps prepends a space in the ppid call, which breaks
         # this ps with a "garbage option" error.
         # XXX Potential gotcha if ps produces weird output.
