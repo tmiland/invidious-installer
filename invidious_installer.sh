@@ -125,6 +125,10 @@ while [ $# != 0 ]; do
     shift
     BANNERS=0
     ;;
+  --uninstall | -u)
+    shift
+    mode="uninstall"
+    ;;
   *)
     printf "Unrecognized option: $1\\n\\n"
     usage
@@ -681,6 +685,203 @@ GetMaster() {
   backupConfig
   git checkout origin/${IN_BRANCH} -B ${IN_BRANCH} >>"${RUN_LOG}" 2>&1
 }
+
+# Get dbname from config file (used in db maintenance and uninstallation)
+get_dbname() {
+  echo "$(sed -n 's/.*dbname *: *\([^ ]*.*\)/\1/p' "$1")"
+}
+
+uninstall_invidious() {
+# Set default uninstallation parameters
+RM_PostgreSQLDB=${RM_PostgreSQLDB:-y}
+RM_RE_PGSQLDB=${RM_RE_PGSQLDB:-n}
+RM_PACKAGES=${RM_PACKAGES:-n}
+RM_PURGE=${RM_PURGE:-n}
+RM_FILES=${RM_FILES:-y}
+RM_USER=${RM_USER:-n}
+# Set db backup path
+PGSQLDB_BAK_PATH="/home/backup/$USER_NAME"
+# Get dbname from config.yml
+RM_PSQLDB=$(get_dbname "${IN_CONFIG}")
+
+read -p "Express uninstall ? [y/n]: " EXPRESS_UNINSTALL
+
+if [[ ! $EXPRESS_UNINSTALL =  "y" ]]; then
+  echo ""
+  read -e -i "$RM_PostgreSQLDB" -p "       Remove database for Invidious ? [y/n]: " RM_PostgreSQLDB
+  if [[ $RM_PostgreSQLDB =  "y" ]]; then
+    echo -e "       ${ORANGE}${WARNING} (( A backup will be placed in ${ARROW} $PGSQLDB_BAK_PATH ))${NORMAL}"
+    echo -e "       Your Invidious database name: $RM_PSQLDB"
+  fi
+  if [[ $RM_PostgreSQLDB =  "y" ]]; then
+    echo -e "       ${ORANGE}${WARNING} (( If yes, only data will be dropped ))${NORMAL}"
+    read -e -i "$RM_RE_PGSQLDB" -p "       Do you intend to reinstall?: " RM_RE_PGSQLDB
+  fi
+  read -e -i "$RM_PACKAGES" -p "       Remove Packages ? [y/n]: " RM_PACKAGES
+  if [[ $RM_PACKAGES = "y" ]]; then
+    read -e -i "$RM_PURGE" -p "       Purge Package configuration files ? [y/n]: " RM_PURGE
+  fi
+  echo -e "       ${ORANGE}${WARNING} (( This option will remove ${ARROW} ${REPO_DIR} ))${NORMAL}"
+  read -e -i "$RM_FILES" -p "       Remove files ? [y/n]: " RM_FILES
+  if [[ "$RM_FILES" = "y" ]]; then
+    echo -e "       ${RED}${WARNING} (( This option will remove ${ARROW} $USER_DIR ))${NORMAL}"
+    echo -e "       ${ORANGE}${WARNING} (( Not needed for reinstall ))${NORMAL}"
+    read -e -i "$RM_USER" -p "       Remove user ? [y/n]: " RM_USER
+  fi
+  echo ""
+  echo -e "${GREEN}${ARROW} Invidious is ready to be uninstalled${NORMAL}"
+  echo ""
+  read -n1 -r -p "press any key to continue or Ctrl+C to cancel..."
+  echo ""
+fi
+  # Remove PostgreSQL database if user ANSWER is yes
+  if [[ "$RM_PostgreSQLDB" = 'y' ]]; then
+    # Stop and disable invidious
+    ${SUDO} $SYSTEM_CMD stop ${SERVICE_NAME}
+    read_sleep 1
+    ${SUDO} $SYSTEM_CMD restart ${PGSQL_SERVICE}
+    read_sleep 1
+    # If directory is not created
+    if [[ ! -d $PGSQLDB_BAK_PATH ]]; then
+      echo -e "${ORANGE}${ARROW} Backup Folder Not Found, adding folder${NORMAL}"
+      ${SUDO} mkdir -p $PGSQLDB_BAK_PATH
+    fi
+
+    echo ""
+    echo -e "${GREEN}${ARROW} Running database backup${NORMAL}"
+    echo ""
+
+    ${SUDO} -i -u postgres pg_dump ${RM_PSQLDB} > ${PGSQLDB_BAK_PATH}/${RM_PSQLDB}.sql
+    read_sleep 2
+    ${SUDO} chown -R 1000:1000 "/home/backup"
+
+    if [[ "$RM_RE_PGSQLDB" != 'n' ]]; then
+      echo ""
+      echo -e "${RED}${ARROW} Dropping Invidious PostgreSQL data${NORMAL}"
+      echo ""
+      ${SUDO} -i -u postgres psql -c "DROP OWNED BY kemal CASCADE;"
+      echo ""
+      echo -e "${ORANGE}${CHECK} Data dropped and backed up to ${ARROW} ${PGSQLDB_BAK_PATH}/${RM_PSQLDB}.sql ${NORMAL}"
+      echo ""
+    fi
+
+    if [[ "$RM_RE_PGSQLDB" != 'y' ]]; then
+      echo ""
+      echo -e "${RED}${ARROW} Dropping Invidious PostgreSQL database${NORMAL}"
+      echo ""
+      ${SUDO} -i -u postgres psql -c "DROP DATABASE $RM_PSQLDB"
+      echo ""
+      echo -e "${ORANGE}${CHECK} Database dropped and backed up to ${ARROW} ${PGSQLDB_BAK_PATH}/${RM_PSQLDB}.sql ${NORMAL}"
+      echo ""
+      echo -e "${RED}${ARROW} Removing user kemal${NORMAL}"
+      ${SUDO} -i -u postgres psql -c "DROP ROLE IF EXISTS kemal;"
+    fi
+  fi
+
+  # Reload Systemd
+  ${SUDO} $SYSTEM_CMD daemon-reload
+  # Remove packages installed during installation
+  if [[ "$RM_PACKAGES" = 'y' ]]; then
+    echo ""
+    echo -e "${ORANGE}${ARROW} Removing packages installed during installation."
+    echo ""
+    echo -e "Note: PostgreSQL will not be removed due to unwanted complications${NORMAL}"
+    echo ""
+
+    if ${PKGCHK} $UNINSTALL_PKGS >/dev/null 2>&1; then
+      for i in $UNINSTALL_PKGS; do
+        echo ""
+        echo -e "${ORANGE}${ARROW} removing packages.${NORMAL}"
+        echo ""
+        ${UNINSTALL} $i 2> /dev/null
+      done
+    fi
+    echo ""
+    echo -e "${GREEN}${CHECK} done.${NORMAL}"
+    echo ""
+  fi
+
+  # Remove conf files
+  if [[ "$RM_PURGE" = 'y' ]]; then
+    # Removing invidious files and modules files
+    echo ""
+    echo -e "${ORANGE}${ARROW} Removing invidious files and modules files.${NORMAL}"
+    echo ""
+    if [[ $DISTRO_GROUP == "Debian" ]]; then
+      rm -r \
+        /lib/systemd/system/${SERVICE_NAME} \
+        /etc/apt/sources.list.d/crystal.list
+    elif [[ $DISTRO_GROUP == "RHEL" ]]; then
+      rm -r \
+        /usr/lib/systemd/system/${SERVICE_NAME} \
+        /etc/yum.repos.d/crystal.repo
+    fi
+
+    if ${PKGCHK} $UNINSTALL_PKGS >/dev/null 2>&1; then
+      for i in $UNINSTALL_PKGS; do
+        echo ""
+        echo -e "${ORANGE}${ARROW} purging packages.${NORMAL}"
+        echo ""
+        ${PURGE} $i 2> /dev/null
+      done
+    fi
+
+    echo ""
+    echo -e "${ORANGE}${ARROW} cleaning up.${NORMAL}"
+    echo ""
+    ${CLEAN}
+    echo ""
+    echo -e "${GREEN}${CHECK} done.${NORMAL}"
+    echo ""
+  fi
+
+  if [[ "$RM_FILES" = 'y' ]]; then
+    # If directory is present, remove
+    if [[ -d ${REPO_DIR} ]]; then
+      echo -e "${ORANGE}${ARROW} Folder Found, removing folder${NORMAL}"
+      rm -r ${REPO_DIR}
+    fi
+  fi
+
+  # Remove user and settings
+  if [[ "$RM_USER" = 'y' ]]; then
+    # Stop and disable invidious
+    ${SUDO} $SYSTEM_CMD stop ${SERVICE_NAME}
+    read_sleep 1
+    ${SUDO} $SYSTEM_CMD restart ${PGSQL_SERVICE}
+    read_sleep 1
+    ${SUDO} $SYSTEM_CMD daemon-reload
+    read_sleep 1
+    grep $USER_NAME /etc/passwd >/dev/null 2>&1
+
+    if [ $? -eq 0 ] ; then
+      echo ""
+      echo -e "${ORANGE}${ARROW} User $USER_NAME Found, removing user and files${NORMAL}"
+      echo ""
+      shopt -s nocasematch
+      if [[ $DISTRO_GROUP == "Debian" ]]; then
+        ${SUDO} deluser --remove-home $USER_NAME
+      fi
+      if [[ $DISTRO_GROUP == "RHEL" ]]; then
+        /usr/sbin/userdel -r $USER_NAME
+      fi
+    fi
+  fi
+  if [ -d /etc/logrotate.d ]; then
+    rm /etc/logrotate.d/invidious.logrotate
+  fi
+  # We're done !
+  echo ""
+  echo -e "${GREEN}${CHECK} Un-installation done.${NORMAL}"
+  echo ""
+  read_sleep 3
+  tput cnorm
+  exit 0
+}
+
+if [ "$mode" = "uninstall" ]; then
+  uninstall_invidious
+fi
 
 install_invidious() {
 
