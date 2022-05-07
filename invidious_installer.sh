@@ -58,6 +58,8 @@ ARROW='➜'
 #WARNING='⚠'
 # Repo name
 REPO_NAME="tmiland/invidious-installer"
+# Invidious repo name
+IN_REPO=${IN_REPO:-iv-org/invidious}
 # Set username
 USER_NAME=invidious
 # Set userdir
@@ -108,10 +110,13 @@ usage() {
   printf "  ${YELLOW}--help|-h${NORMAL}               display this help and exit\\n"
   printf "  ${YELLOW}--verbose|-v${NORMAL}            increase verbosity\\n"
   printf "  ${YELLOW}--banners|-b${NORMAL}            disable banners\\n"
+  printf "  ${YELLOW}--repo|-r${NORMAL}               select custom repo. E.G: user/invidious\\n"
   echo
 }
 
-while [ $# != 0 ]; do
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
   case $1 in
   --help | -h)
     usage
@@ -125,17 +130,28 @@ while [ $# != 0 ]; do
     shift
     BANNERS=0
     ;;
+  --repo | -r) # Bash Space-Separated (e.g., --option argument)
+    IN_REPO="$2" # Source: https://stackoverflow.com/a/14203146
+    shift # past argument
+    shift # past value
+    ;;
   --uninstall | -u)
     shift
     mode="uninstall"
     ;;
-  *)
+  -*|--*)
     printf "Unrecognized option: $1\\n\\n"
     usage
     exit 1
     ;;
+  *)
+    POSITIONAL_ARGS+=("$1") # save positional arg
+    shift # past argument
+    ;;
   esac
 done
+
+set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
 # Include functions
 if [[ -f ./src/slib.sh ]]; then
@@ -992,9 +1008,9 @@ fi
     (
       cd $USER_DIR >>"${RUN_LOG}" 2>&1 || exit 1
 
-    log_debug "Downloading Invidious from GitHub"
+    log_debug "Download Invidious from github.com/${IN_REPO}"
     run_ok "sudo -i -u invidious \
-      git clone https://github.com/iv-org/invidious" "Cloning Invidious from GitHub"
+      git clone https://github.com/${IN_REPO}" "Cloning Invidious from github.com/${IN_REPO}"
       cd - 1>/dev/null 2>&1 || exit 1
     )
   fi
