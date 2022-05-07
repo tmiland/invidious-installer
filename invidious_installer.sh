@@ -755,22 +755,22 @@ if [[ ! $EXPRESS_UNINSTALL =  "y" ]]; then
   echo ""
   read -e -i "$RM_PostgreSQLDB" -p "       Remove database for Invidious ? [y/n]: " RM_PostgreSQLDB
   if [[ $RM_PostgreSQLDB =  "y" ]]; then
-    echo -e "       ${ORANGE}${WARNING} (( A backup will be placed in ${ARROW} $PGSQLDB_BAK_PATH ))${NORMAL}"
+    echo -e "       ${YELLOW}${WARNING} (( A backup will be placed in ${ARROW} $PGSQLDB_BAK_PATH ))${NORMAL}"
     echo -e "       Your Invidious database name: $RM_PSQLDB"
   fi
   if [[ $RM_PostgreSQLDB =  "y" ]]; then
-    echo -e "       ${ORANGE}${WARNING} (( If yes, only data will be dropped ))${NORMAL}"
+    echo -e "       ${YELLOW}${WARNING} (( If yes, only data will be dropped ))${NORMAL}"
     read -e -i "$RM_RE_PGSQLDB" -p "       Do you intend to reinstall?: " RM_RE_PGSQLDB
   fi
   read -e -i "$RM_PACKAGES" -p "       Remove Packages ? [y/n]: " RM_PACKAGES
   if [[ $RM_PACKAGES = "y" ]]; then
     read -e -i "$RM_PURGE" -p "       Purge Package configuration files ? [y/n]: " RM_PURGE
   fi
-  echo -e "       ${ORANGE}${WARNING} (( This option will remove ${ARROW} ${REPO_DIR} ))${NORMAL}"
+  echo -e "       ${YELLOW}${WARNING} (( This option will remove ${ARROW} ${REPO_DIR} ))${NORMAL}"
   read -e -i "$RM_FILES" -p "       Remove files ? [y/n]: " RM_FILES
   if [[ "$RM_FILES" = "y" ]]; then
     echo -e "       ${RED}${WARNING} (( This option will remove ${ARROW} $USER_DIR ))${NORMAL}"
-    echo -e "       ${ORANGE}${WARNING} (( Not needed for reinstall ))${NORMAL}"
+    echo -e "       ${YELLOW}${WARNING} (( Not needed for reinstall ))${NORMAL}"
     read -e -i "$RM_USER" -p "       Remove user ? [y/n]: " RM_USER
   fi
   echo ""
@@ -788,7 +788,7 @@ fi
     read_sleep 1
     # If directory is not created
     if [[ ! -d $PGSQLDB_BAK_PATH ]]; then
-      echo -e "${ORANGE}${ARROW} Backup Folder Not Found, adding folder${NORMAL}"
+      echo -e "${YELLOW}${ARROW} Backup Folder Not Found, adding folder${NORMAL}"
       ${SUDO} mkdir -p $PGSQLDB_BAK_PATH
     fi
 
@@ -806,7 +806,7 @@ fi
       echo ""
       ${SUDO} -i -u postgres psql -c "DROP OWNED BY kemal CASCADE;"
       echo ""
-      echo -e "${ORANGE}${CHECK} Data dropped and backed up to ${ARROW} ${PGSQLDB_BAK_PATH}/${RM_PSQLDB}.sql ${NORMAL}"
+      echo -e "${YELLOW}${CHECK} Data dropped and backed up to ${ARROW} ${PGSQLDB_BAK_PATH}/${RM_PSQLDB}.sql ${NORMAL}"
       echo ""
     fi
 
@@ -816,7 +816,7 @@ fi
       echo ""
       ${SUDO} -i -u postgres psql -c "DROP DATABASE $RM_PSQLDB"
       echo ""
-      echo -e "${ORANGE}${CHECK} Database dropped and backed up to ${ARROW} ${PGSQLDB_BAK_PATH}/${RM_PSQLDB}.sql ${NORMAL}"
+      echo -e "${YELLOW}${CHECK} Database dropped and backed up to ${ARROW} ${PGSQLDB_BAK_PATH}/${RM_PSQLDB}.sql ${NORMAL}"
       echo ""
       echo -e "${RED}${ARROW} Removing user kemal${NORMAL}"
       ${SUDO} -i -u postgres psql -c "DROP ROLE IF EXISTS kemal;"
@@ -828,7 +828,7 @@ fi
   # Remove packages installed during installation
   if [[ "$RM_PACKAGES" = 'y' ]]; then
     echo ""
-    echo -e "${ORANGE}${ARROW} Removing packages installed during installation."
+    echo -e "${YELLOW}${ARROW} Removing packages installed during installation."
     echo ""
     echo -e "Note: PostgreSQL will not be removed due to unwanted complications${NORMAL}"
     echo ""
@@ -836,7 +836,7 @@ fi
     if ${PKGCHK} $UNINSTALL_PKGS >/dev/null 2>&1; then
       for i in $UNINSTALL_PKGS; do
         echo ""
-        echo -e "${ORANGE}${ARROW} removing packages.${NORMAL}"
+        echo -e "${YELLOW}${ARROW} removing packages.${NORMAL}"
         echo ""
         ${UNINSTALL} $i 2> /dev/null
       done
@@ -850,7 +850,7 @@ fi
   if [[ "$RM_PURGE" = 'y' ]]; then
     # Removing invidious files and modules files
     echo ""
-    echo -e "${ORANGE}${ARROW} Removing invidious files and modules files.${NORMAL}"
+    echo -e "${YELLOW}${ARROW} Removing invidious files and modules files.${NORMAL}"
     echo ""
     if [[ $DISTRO_GROUP == "Debian" ]]; then
       rm -r \
@@ -865,14 +865,14 @@ fi
     if ${PKGCHK} $UNINSTALL_PKGS >/dev/null 2>&1; then
       for i in $UNINSTALL_PKGS; do
         echo ""
-        echo -e "${ORANGE}${ARROW} purging packages.${NORMAL}"
+        echo -e "${YELLOW}${ARROW} purging packages.${NORMAL}"
         echo ""
         ${PURGE} $i 2> /dev/null
       done
     fi
 
     echo ""
-    echo -e "${ORANGE}${ARROW} cleaning up.${NORMAL}"
+    echo -e "${YELLOW}${ARROW} cleaning up.${NORMAL}"
     echo ""
     ${CLEAN}
     echo ""
@@ -883,7 +883,7 @@ fi
   if [[ "$RM_FILES" = 'y' ]]; then
     # If directory is present, remove
     if [[ -d ${REPO_DIR} ]]; then
-      echo -e "${ORANGE}${ARROW} Folder Found, removing folder${NORMAL}"
+      echo -e "${YELLOW}${ARROW} Folder Found, removing folder${NORMAL}"
       rm -r ${REPO_DIR}
     fi
   fi
@@ -901,7 +901,7 @@ fi
 
     if [ $? -eq 0 ] ; then
       echo ""
-      echo -e "${ORANGE}${ARROW} User $USER_NAME Found, removing user and files${NORMAL}"
+      echo -e "${YELLOW}${ARROW} User $USER_NAME Found, removing user and files${NORMAL}"
       echo ""
       shopt -s nocasematch
       if [[ $DISTRO_GROUP == "Debian" ]]; then
