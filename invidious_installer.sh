@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2059,SC1091,SC2166,SC2015,SC2129
+# shellcheck disable=SC2059,SC1091,SC2166,SC2015,SC2129,SC2221,SC2222
 
 ## Author: Tommy Miland (@tmiland) - Copyright (c) 2022
 
@@ -281,7 +281,11 @@ if ! lsb_release -si 1>/dev/null 2>&1; then
 fi
 SUDO=""
 UPDATE=""
+#UPGRADE=""
 INSTALL=""
+UNINSTALL=""
+PURGE=""
+CLEAN=""
 PKGCHK=""
 PGSQL_SERVICE=""
 SYSTEM_CMD=""
@@ -292,13 +296,21 @@ if [[ $DISTRO_GROUP == "Debian" ]]; then
   # shellcheck disable=SC2140
   UPDATE="apt-get -o Dpkg::Progress-Fancy="1" update -qq"
   # shellcheck disable=SC2140
+  # UPGRADE="apt-get -o Dpkg::Progress-Fancy="1" upgrade -qq"
+  # shellcheck disable=SC2140
   INSTALL="apt-get -o Dpkg::Progress-Fancy="1" install -qq"
   # shellcheck disable=SC2140
+  UNINSTALL="apt-get -o Dpkg::Progress-Fancy="1" remove -qq"
+  # shellcheck disable=SC2140
+  PURGE="apt-get purge -o Dpkg::Progress-Fancy="1" -qq"
+  CLEAN="apt-get clean && apt-get autoremove -qq"
   PKGCHK="dpkg -s"
   # Pre-install packages
   PRE_INSTALL_PKGS="apt-transport-https git curl sudo gnupg"
   # Install packages
   INSTALL_PKGS="crystal libssl-dev libxml2-dev libyaml-dev libgmp-dev libreadline-dev librsvg2-bin postgresql libsqlite3-dev zlib1g-dev libpcre3-dev libevent-dev"
+  #Uninstall packages
+  UNINSTALL_PKGS="crystal libssl-dev libxml2-dev libyaml-dev libgmp-dev libreadline-dev librsvg2-bin libsqlite3-dev zlib1g-dev libpcre3-dev libevent-dev"
   # PostgreSQL Service
   PGSQL_SERVICE="postgresql"
   # System cmd
@@ -308,12 +320,18 @@ if [[ $DISTRO_GROUP == "Debian" ]]; then
 elif [[ $(lsb_release -si) == "CentOS" ]]; then
   SUDO="sudo"
   UPDATE="yum update -q"
+  # UPGRADE="yum upgrade -q"
   INSTALL="yum install -y -q"
+  UNINSTALL="yum remove -y -q"
+  PURGE="yum purge -y -q"
+  CLEAN="yum clean all -y -q"
   PKGCHK="rpm --quiet --query"
   # Pre-install packages
   PRE_INSTALL_PKGS="epel-release git curl sudo dnf-plugins-core"
   # Install packages
   INSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel postgresql postgresql-server zlib-devel gcc libevent-devel"
+  #Uninstall packages
+  UNINSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel zlib-devel gcc libevent-devel"
   # PostgreSQL Service
   PGSQL_SERVICE="postgresql"
   # System cmd
@@ -323,12 +341,18 @@ elif [[ $(lsb_release -si) == "CentOS" ]]; then
 elif [[ $(lsb_release -si) == "Fedora" ]]; then
   SUDO="sudo"
   UPDATE="dnf update -q"
+  # UPGRADE="dnf upgrade -q"
   INSTALL="dnf install -y -q"
+  UNINSTALL="dnf remove -y -q"
+  PURGE="dnf purge -y -q"
+  CLEAN="dnf clean all -y -q"
   PKGCHK="rpm --quiet --query"
   # Pre-install packages
   PRE_INSTALL_PKGS="git curl sudo"
   # Install packages
   INSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel postgresql postgresql-server zlib-devel gcc libevent-devel"
+  #Uninstall packages
+  UNINSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel zlib-devel gcc libevent-devel"
   # PostgreSQL Service
   PGSQL_SERVICE="postgresql"
   # System cmd
@@ -337,13 +361,18 @@ elif [[ $(lsb_release -si) == "Fedora" ]]; then
   pgsql_config_folder=$(find "/etc/postgresql/" -maxdepth 1 -type d -name "*" | sort -V | tail -1)
 elif [[ $DISTRO_GROUP == "Arch" ]]; then
   SUDO="sudo"
-  UPDATE="pacman -Syu --noconfirm --needed"
+  UPDATE="pacman -Syu"
   INSTALL="pacman -S --noconfirm --needed"
+  UNINSTALL="pacman -R"
+  PURGE="pacman -Rs"
+  CLEAN="pacman -Sc"
   PKGCHK="pacman -Qs"
   # Pre-install packages
   PRE_INSTALL_PKGS="git curl sudo"
   # Install packages
   INSTALL_PKGS="base-devel shards crystal librsvg postgresql"
+  #Uninstall packages
+  UNINSTALL_PKGS="base-devel shards crystal librsvg"
   # PostgreSQL Service
   PGSQL_SERVICE="postgresql"
   # System cmd
