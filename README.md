@@ -116,7 +116,8 @@ Tested and working on:
 - [Bug report](https://github.com/tmiland/Invidious-Updater/issues/new?assignees=tmiland&labels=bug&template=bug_report.md&title=Bug-report:)
 - [Feature request](https://github.com/tmiland/Invidious-Updater/issues/new?assignees=tmiland&labels=enhancement&template=feature_request.md&title=Feature-request:)
 
-## Donations 
+## Donations
+<a href="https://www.buymeacoffee.com/tmiland" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 - [PayPal me](https://paypal.me/milanddata)
 - [BTC] : 33mjmoPxqfXnWNsvy8gvMZrrcG3gEa3YDM
 
