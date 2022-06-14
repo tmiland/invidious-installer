@@ -47,7 +47,7 @@ VERSION='2.0.1' # Must stay on line 14 for updater to fetch the numbers
 # time_stamp=$(date)
 # Detect absolute and full path as well as filename of this script
 cd "$(dirname "$0")" || exit
-#CURRDIR=$(pwd)
+CURRDIR=$(pwd)
 #SCRIPT_FILENAME=$(basename "$0")
 cd - > /dev/null || exit
 sfp=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || greadlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
@@ -95,7 +95,7 @@ CAPTCHA_KEY=${CAPTCHA_KEY:-}
 # Default Swap option
 SWAP_OPTIONS=${SWAP_OPTIONS:-n}
 # Logfile
-LOGFILE=invidious_installer.log
+LOGFILE=$CURRDIR/invidious_installer.log
 # Console output level; ignore debug level messages.
 VERBOSE=0
 #
@@ -494,7 +494,7 @@ show_preinstall_banner() {
   echo ""
   echo ""
   echo ""
-  echo -e "Documentation for this script is available here: ${YELLOW}\n ${ARROW} https://github.com/tmiland/${REPO_NAME}${NORMAL}\n"
+  echo -e "Documentation for this script is available here: ${YELLOW}\n ${ARROW} https://github.com/${REPO_NAME}${NORMAL}\n"
 }
 
 # Install banner
@@ -513,7 +513,7 @@ show_install_banner() {
   echo ""
   echo ""
   echo ""
-  echo -e "Documentation for this script is available here: ${YELLOW}\n ${ARROW} https://github.com/tmiland/${REPO_NAME}${NORMAL}\n"
+  echo -e "Documentation for this script is available here: ${YELLOW}\n ${ARROW} https://github.com/${REPO_NAME}${NORMAL}\n"
 }
 
 # Banner
@@ -527,7 +527,7 @@ show_banner() {
   echo ""
   echo ""
   echo ""
-  echo -e "Documentation for this script is available here: ${YELLOW}\n ${ARROW} https://github.com/tmiland/${REPO_NAME}${NORMAL}\n"
+  echo -e "Documentation for this script is available here: ${YELLOW}\n ${ARROW} https://github.com/${REPO_NAME}${NORMAL}\n"
 }
 
 # Exit Script
@@ -550,7 +550,7 @@ exit_script() {
    ${GREEN}${CHECK}${NORMAL} ${BBLUE}Paypal${NORMAL} ${ARROW} ${YELLOW}https://paypal.me/milanddata${NORMAL}
    ${GREEN}${CHECK}${NORMAL} ${BBLUE}BTC${NORMAL}    ${ARROW} ${YELLOW}33mjmoPxqfXnWNsvy8gvMZrrcG3gEa3YDM${NORMAL}
   "
-  echo -e "Documentation for this script is available here: ${YELLOW}\n${ARROW} https://github.com/tmiland/${REPO_NAME}${NORMAL}\n"
+  echo -e "Documentation for this script is available here: ${YELLOW}\n${ARROW} https://github.com/${REPO_NAME}${NORMAL}\n"
   echo -e "${YELLOW}${ARROW} Goodbye.${NORMAL} ☺"
   echo ""
 }
