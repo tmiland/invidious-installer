@@ -91,10 +91,6 @@ If root password is not set, type:
 sudo passwd root
 ```
 
-<p align="center">
-  <img width="600" src="https://cdn.rawgit.com/tmiland/invidious-installer/main/_images/invidious_installer.svg?sanitize=true">
-</p>
-
 ### To keep Invidious up-to-date: [Invidious-Updater](https://github.com/tmiland/Invidious-Updater)
 
 ## Testing
