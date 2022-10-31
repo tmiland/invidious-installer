@@ -20,7 +20,7 @@ This script is just the install option in [Invidious-Updater](https://github.com
 ## Installation
 
 <p align="center">
-  <img width="600" src="https://cdn.rawgit.com/tmiland/invidious-installer/main/img/invidious_installer.svg?sanitize=true">
+  <img width="600" src="https://cdn.rawgit.com/tmiland/invidious-installer/main/_images/invidious_installer.svg?sanitize=true">
 </p>
 
 ### Download the script:
