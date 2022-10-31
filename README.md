@@ -19,9 +19,7 @@ This script is just the install option in [Invidious-Updater](https://github.com
 
 ## Installation
 
-<p align="center">
-  <img width="600" src="https://cdn.rawgit.com/tmiland/invidious-installer/main/_images/invidious_installer.svg?sanitize=true">
-</p>
+[![invidious-installer Image](https://raw.githubusercontent.com/tmiland/invidious-installer/main/_images/invidious_installer.png)](https://github.com/tmiland/invidious-installer/blob/main/_images/invidious_installer.png)
 
 ### Download the script:
 
@@ -92,6 +90,10 @@ If root password is not set, type:
 ```bash
 sudo passwd root
 ```
+
+<p align="center">
+  <img width="600" src="https://cdn.rawgit.com/tmiland/invidious-installer/main/_images/invidious_installer.svg?sanitize=true">
+</p>
 
 ### To keep Invidious up-to-date: [Invidious-Updater](https://github.com/tmiland/Invidious-Updater)
 
