@@ -115,15 +115,13 @@ Tested and working on:
 - [Feature request](https://github.com/tmiland/Invidious-Updater/issues/new?assignees=tmiland&labels=enhancement&template=feature_request.md&title=Feature-request:)
 
 ## Donations
-<a href="https://www.buymeacoffee.com/tmiland" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
-- [PayPal me](https://paypal.me/milanddata)
-- [BTC] : 33mjmoPxqfXnWNsvy8gvMZrrcG3gEa3YDM
+<a href="https://coindrop.to/tmiland" target="_blank"><img src="https://coindrop.to/embed-button.png" style="border-radius: 10px; height: 57px !important;width: 229px !important;" alt="Coindrop.to me"></img></a>
 
 ## Web Hosting
 
-Sign up for web hosting using this link, and receive $100 in credit over 60 days.
+Sign up for web hosting using this link, and receive $200 in credit over 60 days.
 
-[DigitalOcean](https://m.do.co/c/f1f2b475fca0)
+<a href="https://www.digitalocean.com/?refcode=f1f2b475fca0&amp;utm_campaign=Referral_Invite&amp;utm_medium=Referral_Program&amp;utm_source=badge"><img src="https://web-platforms.sfo2.digitaloceanspaces.com/WWW/Badge%203.svg" alt="DigitalOcean Referral Badge"></a>
 
 #### Disclaimer 
 
