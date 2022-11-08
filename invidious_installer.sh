@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2059,SC1091,SC2166,SC2015,SC2129,SC2221,SC2222
+# shellcheck disable=SC2059,SC1091,SC2166,SC2015,SC2129,SC2221,SC2222,SC2086
 
 ## Author: Tommy Miland (@tmiland) - Copyright (c) 2022
 
@@ -987,13 +987,20 @@ fi
 
   log_debug "Installing Crystal packages"
   run_ok "get_crystal" "Installing Crystal"
-
+  if [[ $(lsb_release -si) == "Ubuntu" ]] && [[ $(lsb_release -rs) == "22.04" ]]; then
+    # Install packages for Ubuntu 22.04 (exluding postgresql. PostgreSQL 13 Must be manually installed)
+    INSTALL_PKGS="crystal libssl-dev libxml2-dev libyaml-dev libgmp-dev libreadline-dev librsvg2-bin libsqlite3-dev zlib1g-dev libpcre3-dev libevent-dev"
+    log_debug "Updating packages for $(lsb_release -si) $(lsb_release -rs)"
+    run_ok "${SUDO} ${UPDATE}" "Updating package repo for $(lsb_release -si) $(lsb_release -rs)"
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | ${SUDO} gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg 1>/dev/null 2>&1
+    echo "deb [arch=amd64] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg 13" | ${SUDO} tee  /etc/apt/sources.list.d/pgdg.list 1>/dev/null 2>&1
+    ${SUDO} ${INSTALL} postgresql-13 >>"${RUN_LOG}" 2>&1
+  fi
   if ! ${PKGCHK} "$INSTALL_PKGS" 1>/dev/null 2>&1; then
     log_debug "Updating packages"
     run_ok "${SUDO} ${UPDATE}" "Updating package repo"
     for i in $INSTALL_PKGS; do
       log_debug "Installing required packages $i"
-      # shellcheck disable=SC2086
       ${SUDO} ${INSTALL} ${i} >>"${RUN_LOG}" 2>&1
     done
   fi
