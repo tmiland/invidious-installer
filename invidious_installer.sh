@@ -1041,6 +1041,8 @@ fi
     run_ok "sudo -i -u invidious \
       git clone https://github.com/${IN_REPO}" "Cloning Invidious from github.com/${IN_REPO}"
       cd - 1>/dev/null 2>&1 || exit 1
+      # Add invidious folder as safe directory
+      git config --global --add safe.directory ${REPO_DIR} >>"${RUN_LOG}" 2>&1
     )
   fi
 
@@ -1148,9 +1150,6 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
   echo
   log_debug "Phase 4 of 4: Invidious Configuration"
   printf "${GREEN}▣▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}4${NORMAL} of ${GREEN}4${NORMAL}: Setup Invidious\\n"
-
-  # Add invidious folder as safe directory
-  git config --global --add safe.directory ${REPO_DIR} >>"${RUN_LOG}" 2>&1
 
   log_debug "Update config"
   run_ok "update_config" "Updating config"
