@@ -990,12 +990,10 @@ fi
   if [[ $(lsb_release -si) == "Ubuntu" ]] && [[ $(lsb_release -rs) == "22.04" ]]; then
     # Install packages for Ubuntu 22.04 (exluding postgresql. PostgreSQL 13 Must be manually installed)
     INSTALL_PKGS="crystal libssl-dev libxml2-dev libyaml-dev libgmp-dev libreadline-dev librsvg2-bin libsqlite3-dev zlib1g-dev libpcre3-dev libevent-dev"
-    log_debug "Updating packages for $(lsb_release -si) $(lsb_release -rs)"
-    run_ok "${SUDO} ${UPDATE}" "Updating package repo for $(lsb_release -si) $(lsb_release -rs)"
-    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | ${SUDO} gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg 1>/dev/null 2>&1
+    log_debug "Installing PostgreSQL 13 for $(lsb_release -si) $(lsb_release -rs)"
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | ${SUDO} tee /etc/apt/trusted.gpg.d/postgresql.gpg 1>/dev/null 2>&1
     echo "deb [arch=amd64] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg 13" | ${SUDO} tee  /etc/apt/sources.list.d/pgdg.list 1>/dev/null 2>&1
-    log_debug "Updating packages"
-    run_ok "${SUDO} ${UPDATE}" "Updating package repo"
+    run_ok "${SUDO} ${UPDATE}" "Updating package repo for $(lsb_release -si) $(lsb_release -rs)"
     ${SUDO} ${INSTALL} postgresql-13 >>"${RUN_LOG}" 2>&1
   fi
   if ! ${PKGCHK} "$INSTALL_PKGS" 1>/dev/null 2>&1; then
