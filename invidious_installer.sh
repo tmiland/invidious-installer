@@ -992,7 +992,7 @@ fi
     INSTALL_PKGS="crystal libssl-dev libxml2-dev libyaml-dev libgmp-dev libreadline-dev librsvg2-bin libsqlite3-dev zlib1g-dev libpcre3-dev libevent-dev"
     log_debug "Installing PostgreSQL 13 for $(lsb_release -si) $(lsb_release -rs)"
     curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | ${SUDO} tee /etc/apt/trusted.gpg.d/postgresql.gpg 1>/dev/null 2>&1
-    echo "deb [arch=amd64] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg 13" | ${SUDO} tee  /etc/apt/sources.list.d/pgdg.list 1>/dev/null 2>&1
+    echo "deb [arch=amd64] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | ${SUDO} tee  /etc/apt/sources.list.d/pgdg.list 1>/dev/null 2>&1
     run_ok "${SUDO} ${UPDATE}" "Updating package repo for $(lsb_release -si) $(lsb_release -rs)"
     ${SUDO} ${INSTALL} postgresql-13 >>"${RUN_LOG}" 2>&1
   fi
