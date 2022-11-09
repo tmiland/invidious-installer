@@ -480,8 +480,8 @@ fi
 installer_header() {
   echo -e "${GREEN}\n"
   echo ' ╔═══════════════════════════════════════════════════════════════════╗'
-  echo ' ║                        '"${SCRIPT_NAME}"'                     ║'
-  echo ' ║               Automatic install script for Invidious              ║'
+  echo ' ║                      invidious installer.sh                       ║'
+  echo ' ║              Automatic install script for Invidious               ║'
   echo ' ║                      Maintained by @tmiland                       ║'
   echo ' ║                          version: '${VERSION}'                           ║'
   echo ' ╚═══════════════════════════════════════════════════════════════════╝'
@@ -492,7 +492,7 @@ installer_header() {
 installer_preinstall_banner() {
   clear
   installer_header
-  echo "Thank you for using the ${SCRIPT_NAME} script."
+  echo "Thank you for using the invidious installer.sh script."
   echo ""
   echo ""
   echo ""
@@ -506,7 +506,7 @@ installer_install_banner() {
   echo ""
   echo ""
   echo ""
-  echo "Thank you for using the ${SCRIPT_NAME} script."
+  echo "Thank you for using the invidious installer.sh script."
   echo ""
   echo ""
   echo ""
@@ -522,7 +522,7 @@ installer_install_banner() {
 installer_banner() {
   #clear
   installer_header
-  echo "Welcome to the ${SCRIPT_NAME} script."
+  echo "Welcome to the invidious installer.sh script."
   echo ""
   echo ""
   echo "${SHOW_STATUS} "
@@ -549,8 +549,8 @@ exit_script() {
   echo -e "
    This script runs on coffee ☕
 
-   ${GREEN}${CHECK}${NORMAL} ${BBLUE}Paypal${NORMAL} ${ARROW} ${YELLOW}https://paypal.me/milanddata${NORMAL}
-   ${GREEN}${CHECK}${NORMAL} ${BBLUE}BTC${NORMAL}    ${ARROW} ${YELLOW}33mjmoPxqfXnWNsvy8gvMZrrcG3gEa3YDM${NORMAL}
+   ${GREEN}${CHECK}${NORMAL} ${BBLUE}GitHub${NORMAL} ${ARROW} ${YELLOW}https://github.com/sponsors/tmiland${NORMAL}
+   ${GREEN}${CHECK}${NORMAL} ${BBLUE}Coindrop${NORMAL} ${ARROW} ${YELLOW}https://coindrop.to/tmiland${NORMAL}
   "
   echo -e "Documentation for this script is available here: ${YELLOW}\n${ARROW} https://github.com/${REPO_NAME}${NORMAL}\n"
   echo -e "${YELLOW}${ARROW} Goodbye.${NORMAL} ☺"
