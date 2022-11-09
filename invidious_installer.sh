@@ -434,7 +434,7 @@ if [[ "$free" -le 2048  ]]; then
 fi
 
 # Show service status - @FalconStats
-show_status() {
+installer_status() {
   declare -a services=(
     "invidious"
     "postgresql"
@@ -469,13 +469,13 @@ show_status() {
 }
 
 if ( $SYSTEM_CMD -q is-active ${SERVICE_NAME}); then
-  SHOW_STATUS=$(show_status)
+  SHOW_STATUS=$(installer_status)
 fi
 
 # BANNERS
 
 # Header
-header() {
+installer_header() {
   echo -e "${GREEN}\n"
   echo ' ╔═══════════════════════════════════════════════════════════════════╗'
   echo ' ║                        '"${SCRIPT_NAME}"'                     ║'
@@ -487,9 +487,9 @@ header() {
 }
 
 # Preinstall banner
-show_preinstall_banner() {
+installer_preinstall_banner() {
   clear
-  header
+  installer_header
   echo "Thank you for using the ${SCRIPT_NAME} script."
   echo ""
   echo ""
@@ -498,9 +498,9 @@ show_preinstall_banner() {
 }
 
 # Install banner
-show_install_banner() {
+installer_install_banner() {
   #clear
-  header
+  installer_header
   echo ""
   echo ""
   echo ""
@@ -517,9 +517,9 @@ show_install_banner() {
 }
 
 # Banner
-show_banner() {
+installer_banner() {
   #clear
-  header
+  installer_header
   echo "Welcome to the ${SCRIPT_NAME} script."
   echo ""
   echo ""
@@ -532,7 +532,7 @@ show_banner() {
 
 # Exit Script
 exit_script() {
-  #header
+  #installer_header
   echo -e "${GREEN}"
   echo    '      ____           _     ___                         '
   echo    '     /  _/___ _   __(_)___/ (_)___  __  _______        '
@@ -932,7 +932,7 @@ install_invidious() {
 
   chk_git_repo
 if [ "$BANNERS" = "1" ]; then
-  show_preinstall_banner
+  installer_preinstall_banner
 fi
 
   case $HTTPS_ONLY in
@@ -1196,7 +1196,7 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
 # Start Script
   chk_permissions
 if [ "$BANNERS" = "1" ]; then
-  show_banner
+  installer_banner
 fi
 # Install Invidious
   errors=$((0))
@@ -1207,7 +1207,7 @@ fi
   if [ $errors -eq "0" ]; then
     read_sleep 5
     if [ "$BANNERS" = "1" ]; then
-      show_install_banner
+      installer_install_banner
     fi
     read_sleep 5
     #indexit
