@@ -56,6 +56,8 @@ if [ -z "$sfp" ]; then sfp=${BASH_SOURCE[0]}; fi
 # Icons used for printing
 ARROW='➜'
 #WARNING='⚠'
+# Script name
+SCRIPT_NAME="invidious installer.sh"
 # Repo name
 REPO_NAME="tmiland/invidious-installer"
 # Invidious repo name
