@@ -11,7 +11,7 @@
 ####                   Maintained by @tmiland                     ####
 ######################################################################
 
-VERSION='2.0.1' # Must stay on line 14 for updater to fetch the numbers
+VERSION='2.1.0' # Must stay on line 14 for updater to fetch the numbers
 
 #------------------------------------------------------------------------------#
 #
@@ -56,6 +56,8 @@ if [ -z "$sfp" ]; then sfp=${BASH_SOURCE[0]}; fi
 # Icons used for printing
 ARROW='➜'
 #WARNING='⚠'
+# Script name
+SCRIPT_NAME="invidious installer.sh"
 # Repo name
 REPO_NAME="tmiland/invidious-installer"
 # Invidious repo name
@@ -434,7 +436,7 @@ if [[ "$free" -le 2048  ]]; then
 fi
 
 # Show service status - @FalconStats
-show_status() {
+installer_status() {
   declare -a services=(
     "invidious"
     "postgresql"
@@ -469,17 +471,17 @@ show_status() {
 }
 
 if ( $SYSTEM_CMD -q is-active ${SERVICE_NAME}); then
-  SHOW_STATUS=$(show_status)
+  SHOW_STATUS=$(installer_status)
 fi
 
 # BANNERS
 
 # Header
-header() {
+installer_header() {
   echo -e "${GREEN}\n"
   echo ' ╔═══════════════════════════════════════════════════════════════════╗'
-  echo ' ║                        '"${SCRIPT_NAME}"'                     ║'
-  echo ' ║               Automatic install script for Invidious              ║'
+  echo ' ║                      invidious installer.sh                       ║'
+  echo ' ║              Automatic install script for Invidious               ║'
   echo ' ║                      Maintained by @tmiland                       ║'
   echo ' ║                          version: '${VERSION}'                           ║'
   echo ' ╚═══════════════════════════════════════════════════════════════════╝'
@@ -487,10 +489,10 @@ header() {
 }
 
 # Preinstall banner
-show_preinstall_banner() {
+installer_preinstall_banner() {
   clear
-  header
-  echo "Thank you for using the ${SCRIPT_NAME} script."
+  installer_header
+  echo "Thank you for using the invidious installer.sh script."
   echo ""
   echo ""
   echo ""
@@ -498,13 +500,13 @@ show_preinstall_banner() {
 }
 
 # Install banner
-show_install_banner() {
+installer_install_banner() {
   #clear
-  header
+  installer_header
   echo ""
   echo ""
   echo ""
-  echo "Thank you for using the ${SCRIPT_NAME} script."
+  echo "Thank you for using the invidious installer.sh script."
   echo ""
   echo ""
   echo ""
@@ -517,10 +519,10 @@ show_install_banner() {
 }
 
 # Banner
-show_banner() {
+installer_banner() {
   #clear
-  header
-  echo "Welcome to the ${SCRIPT_NAME} script."
+  installer_header
+  echo "Welcome to the invidious installer.sh script."
   echo ""
   echo ""
   echo "${SHOW_STATUS} "
@@ -532,7 +534,7 @@ show_banner() {
 
 # Exit Script
 exit_script() {
-  #header
+  #installer_header
   echo -e "${GREEN}"
   echo    '      ____           _     ___                         '
   echo    '     /  _/___ _   __(_)___/ (_)___  __  _______        '
@@ -547,8 +549,8 @@ exit_script() {
   echo -e "
    This script runs on coffee ☕
 
-   ${GREEN}${CHECK}${NORMAL} ${BBLUE}Paypal${NORMAL} ${ARROW} ${YELLOW}https://paypal.me/milanddata${NORMAL}
-   ${GREEN}${CHECK}${NORMAL} ${BBLUE}BTC${NORMAL}    ${ARROW} ${YELLOW}33mjmoPxqfXnWNsvy8gvMZrrcG3gEa3YDM${NORMAL}
+   ${GREEN}${CHECK}${NORMAL} ${BBLUE}GitHub${NORMAL} ${ARROW} ${YELLOW}https://github.com/sponsors/tmiland${NORMAL}
+   ${GREEN}${CHECK}${NORMAL} ${BBLUE}Coindrop${NORMAL} ${ARROW} ${YELLOW}https://coindrop.to/tmiland${NORMAL}
   "
   echo -e "Documentation for this script is available here: ${YELLOW}\n${ARROW} https://github.com/${REPO_NAME}${NORMAL}\n"
   echo -e "${YELLOW}${ARROW} Goodbye.${NORMAL} ☺"
@@ -932,7 +934,7 @@ install_invidious() {
 
   chk_git_repo
 if [ "$BANNERS" = "1" ]; then
-  show_preinstall_banner
+  installer_preinstall_banner
 fi
 
   case $HTTPS_ONLY in
@@ -1203,7 +1205,7 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
 # Start Script
   chk_permissions
 if [ "$BANNERS" = "1" ]; then
-  show_banner
+  installer_banner
 fi
 # Install Invidious
   errors=$((0))
@@ -1214,7 +1216,7 @@ fi
   if [ $errors -eq "0" ]; then
     read_sleep 5
     if [ "$BANNERS" = "1" ]; then
-      show_install_banner
+      installer_install_banner
     fi
     read_sleep 5
     #indexit
