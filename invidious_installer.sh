@@ -1166,7 +1166,7 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
       log_debug "Run shards install"
       run_ok "shards install --production" "Running shards install"
       log_debug "Run crystal build"
-      run_ok "crystal build src/invidious.cr --release" "Running crystal build"
+      run_ok "crystal build src/invidious.cr --release -Ddisable_quic" "Running crystal build"
       cd - 1>/dev/null 2>&1 || exit 1
     )
   fi
