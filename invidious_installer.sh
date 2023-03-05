@@ -238,7 +238,7 @@ elif [[ -f /etc/os-release ]]; then
 fi
 
 case "$DISTRO" in
-  Debian*|Ubuntu*|LinuxMint*|PureOS*|Pop*|Devuan*)
+  Debian*|Ubuntu*|Linux\ Mint*|PureOS*|Pop*|Devuan*)
     # shellcheck disable=SC2140
     PKGCMD="apt-get -o Dpkg::Progress-Fancy="1" install -qq"
     LSB=lsb-release
