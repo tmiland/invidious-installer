@@ -77,7 +77,7 @@ IN_BRANCH=master
 # Default domain
 DOMAIN=${DOMAIN:-}
 # Default ip
-IP=${IP:-localhost}
+IP=${IP:-0.0.0.0}
 # Default port
 PORT=${PORT:-3000}
 # Default dbname
@@ -94,6 +94,9 @@ EXTERNAL_PORT=${EXTERNAL_PORT:-}
 ADMINS=${ADMINS:-}
 # Default Captcha Key
 CAPTCHA_KEY=${CAPTCHA_KEY:-}
+# Default HMAC_KEY
+HMAC_KEY_GEN=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+HMAC_KEY=${HMAC_KEY:-$HMAC_KEY_GEN}
 # Default Swap option
 SWAP_OPTIONS=${SWAP_OPTIONS:-n}
 # Logfile
@@ -310,7 +313,7 @@ if [[ $DISTRO_GROUP == "Debian" ]]; then
   # Pre-install packages
   PRE_INSTALL_PKGS="apt-transport-https git curl sudo gnupg"
   # Install packages
-  INSTALL_PKGS="crystal libssl-dev libxml2-dev libyaml-dev libgmp-dev libreadline-dev librsvg2-bin postgresql libsqlite3-dev zlib1g-dev libpcre3-dev libevent-dev"
+  INSTALL_PKGS="crystal1.9=1.9.2-1+1.83 libssl-dev libxml2-dev libyaml-dev libgmp-dev libreadline-dev librsvg2-bin postgresql libsqlite3-dev zlib1g-dev libpcre3-dev libevent-dev"
   #Uninstall packages
   UNINSTALL_PKGS="crystal libssl-dev libxml2-dev libyaml-dev libgmp-dev libreadline-dev librsvg2-bin libsqlite3-dev zlib1g-dev libpcre3-dev libevent-dev"
   # PostgreSQL Service
