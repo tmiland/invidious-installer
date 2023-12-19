@@ -618,6 +618,7 @@ update_config() {
       sed -i "15i\admins: \n- $ADMINS" "$f" > $TFILE
       sed -i "17i\captcha_key: $CAPTCHA_KEY" "$f" > $TFILE
       sed -i "18i\captcha_api_url: https://api.anti-captcha.com" "$f" > $TFILE
+      sed -i "19i\hmac_key: $HMAC_KEY" "$f" > $TFILE
       sed "s/$OLDPASS/$NEWPASS/g; s/$OLDDBNAME/$NEWDBNAME/g; s/$OLDDOMAIN/$NEWDOMAIN/g; s/$OLDHTTPS/$NEWHTTPS/g; s/$OLDEXTERNAL/$NEWEXTERNAL/g;" "$f" > $TFILE &&
       mv $TFILE "$f" >>"${RUN_LOG}" 2>&1
     else
