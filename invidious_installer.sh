@@ -112,6 +112,7 @@ usage() {
   printf "  ${YELLOW}--help|-h${NORMAL}               display this help and exit\\n"
   printf "  ${YELLOW}--verbose|-v${NORMAL}            increase verbosity\\n"
   printf "  ${YELLOW}--banners|-b${NORMAL}            disable banners\\n"
+  printf "  ${YELLOW}--uninstall|-u${NORMAL}          uninstall"
   printf "  ${YELLOW}--repo|-r${NORMAL}               select custom repo. E.G: user/invidious\\n"
   echo
 }
