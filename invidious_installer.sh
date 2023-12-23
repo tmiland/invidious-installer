@@ -94,6 +94,9 @@ EXTERNAL_PORT=${EXTERNAL_PORT:-}
 ADMINS=${ADMINS:-}
 # Default Captcha Key
 CAPTCHA_KEY=${CAPTCHA_KEY:-}
+# Default HMAC_KEY
+HMAC_KEY_GEN=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+HMAC_KEY=${HMAC_KEY:-$HMAC_KEY_GEN}
 # Default Swap option
 SWAP_OPTIONS=${SWAP_OPTIONS:-n}
 # Logfile
@@ -615,7 +618,8 @@ update_config() {
       sed -i "14i\host_binding: $IP" "$f" > $TFILE
       sed -i "15i\admins: \n- $ADMINS" "$f" > $TFILE
       sed -i "17i\captcha_key: $CAPTCHA_KEY" "$f" > $TFILE
-      sed -i "18i\captcha_api_url: https://api.anti-captcha.com" "$f" > $TFILE
+      sed -i "18i\hmac_key: $HMAC_KEY" "$f" > $TFILE
+      sed -i "19i\captcha_api_url: https://api.anti-captcha.com" "$f" > $TFILE
       sed "s/$OLDPASS/$NEWPASS/g; s/$OLDDBNAME/$NEWDBNAME/g; s/$OLDDOMAIN/$NEWDOMAIN/g; s/$OLDHTTPS/$NEWHTTPS/g; s/$OLDEXTERNAL/$NEWEXTERNAL/g;" "$f" > $TFILE &&
       mv $TFILE "$f" >>"${RUN_LOG}" 2>&1
     else
