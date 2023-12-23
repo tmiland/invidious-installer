@@ -73,8 +73,19 @@ SWAP_OPTIONS=n \
 
 - For Captcha key, add `CAPTCHA_KEY=YOUR_CAPTCHA_KEY \` to options.
 - PostgreSQL password will be auto-generated.
-- For verbose output, use [ -v ] argument
-- Use a custom invidious repo/fork with [ -r | --repo user/invidious ]
+
+```bash
+Usage:
+
+If called without arguments, installs Invidious."
+
+--help       |-h            display this help and exit
+--verbose    |-v            increase verbosity
+--banners    |-b            disable banners
+--uninstall  |-u            uninstall
+--repo       |-r            select custom repo. E.G: user/invidious
+```
+
 - installation log in invidious_installer.log
 - [./src/slib.sh](https://github.com/tmiland/invidious-installer/blob/main/src/slib.sh) function script is sourced remotely if not found locally
   - This script is a combination of functions for spinners, colors and logging
