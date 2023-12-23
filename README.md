@@ -77,7 +77,7 @@ SWAP_OPTIONS=n \
 ```bash
 Usage:
 
-If called without arguments, installs Invidious."
+If called without arguments, installs Invidious.
 
 --help       |-h            display this help and exit
 --verbose    |-v            increase verbosity
