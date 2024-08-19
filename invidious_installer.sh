@@ -1168,10 +1168,12 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
   if [[ -d ${REPO_DIR} ]]; then
     (
       cd ${REPO_DIR} >>"${RUN_LOG}" 2>&1 || exit 1
-      log_debug "Run shards install"
-      run_ok "shards install --production" "Running shards install"
-      log_debug "Run crystal build"
-      run_ok "crystal build src/invidious.cr --release -Ddisable_quic" "Running crystal build"
+      # log_debug "Run shards install"
+      # run_ok "shards install --production" "Running shards install"
+      # log_debug "Run crystal build"
+      # run_ok "crystal build src/invidious.cr --release -Ddisable_quic" "Running crystal build"
+      log_debug "Run make"
+      run_ok "sudo -i -u invidious make -C ${REPO_DIR}" "Running makefile"
       cd - 1>/dev/null 2>&1 || exit 1
     )
   fi
