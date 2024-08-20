@@ -400,18 +400,15 @@ fi
 
 # Make sure that the script runs with root permissions
 chk_permissions() {
-
   if [[ $EUID -ne 0 ]]; then
   	echo -e "Sorry, you need to run this as root"
   	exit 1
   fi
-
 }
 
 ADD_SWAP_URL=https://raw.githubusercontent.com/tmiland/swap-add/master/swap-add.sh
 
 add_swap() {
-
   if [[ $(command -v 'curl') ]]; then
     # shellcheck disable=SC1090
     source <(curl -sSLf $ADD_SWAP_URL)
@@ -423,8 +420,8 @@ add_swap() {
     exit 0
   fi
   read_sleep 3
-
 }
+
 ## get total free memory size in megabytes(MB)
 free=$(free -mt | grep Total | awk '{print $4}')
 if [[ "$free" -le 2048  ]]; then
@@ -471,7 +468,6 @@ installer_status() {
   done
 
   echo -e "$line"
-
 }
 
 if ( $SYSTEM_CMD -q is-active ${SERVICE_NAME}); then
@@ -563,7 +559,6 @@ exit_script() {
 
 # Check Git repo
 chk_git_repo() {
-
   # Check if the folder is a git repo
   if [[ -d "${REPO_DIR}/.git" ]]; then
     echo ""
@@ -575,7 +570,6 @@ chk_git_repo() {
     #indexit
     exit 0
   fi
-
 }
 
 # Set permissions
@@ -634,9 +628,12 @@ update_config() {
   # Source: https://www.cyberciti.biz/faq/unix-linux-replace-string-words-in-many-files/
 }
 
+system_cmd() {
+  ${SUDO} $SYSTEM_CMD "$1" "$2"
+}
+
 # Systemd install
 systemd_install() {
-
   # Setup Systemd Service
   shopt -s nocasematch
   if [[ $DISTRO_GROUP == "RHEL" ]]; then
@@ -645,24 +642,22 @@ systemd_install() {
     cp ${REPO_DIR}/${SERVICE_NAME} /lib/systemd/system/${SERVICE_NAME} >>"${RUN_LOG}" 2>&1
   fi
   # Enable invidious start at boot
-  ${SUDO} $SYSTEM_CMD enable ${SERVICE_NAME} >>"${RUN_LOG}" 2>&1
+  system_cmd enable ${SERVICE_NAME} >>"${RUN_LOG}" 2>&1
   # Reload Systemd
-  ${SUDO} $SYSTEM_CMD daemon-reload >>"${RUN_LOG}" 2>&1
+  system_cmd daemon-reload >>"${RUN_LOG}" 2>&1
   # Restart Invidious
-  ${SUDO} $SYSTEM_CMD start ${SERVICE_NAME} >>"${RUN_LOG}" 2>&1
+  system_cmd start ${SERVICE_NAME} >>"${RUN_LOG}" 2>&1
   if ( $SYSTEM_CMD -q is-active ${SERVICE_NAME})
   then
-    ${SUDO} $SYSTEM_CMD status ${SERVICE_NAME} --no-pager >>"${RUN_LOG}" 2>&1
+    system_cmd status ${SERVICE_NAME} --no-pager >>"${RUN_LOG}" 2>&1
     read_sleep 5
   else
     ${SUDO} journalctl -u ${SERVICE_NAME} >>"${RUN_LOG}" 2>&1
     read_sleep 5
   fi
-
 }
 
 logrotate_install() {
-
   if [ -d /etc/logrotate.d ]; then
     echo "Adding logrotate configuration..."
     echo "/home/invidious/invidious/invidious.log {
@@ -675,12 +670,10 @@ logrotate_install() {
 }" | ${SUDO} tee /etc/logrotate.d/invidious.logrotate >>"${RUN_LOG}" 2>&1
     chmod 0644 /etc/logrotate.d/invidious.logrotate >>"${RUN_LOG}" 2>&1
   fi
-
 }
 
 # Get Crystal
 get_crystal() {
-
   shopt -s nocasematch
   if [[ $DISTRO_GROUP == "Debian" ]]; then
     if [[ ! -e /etc/apt/sources.list.d/crystal.list ]]; then
@@ -698,7 +691,6 @@ get_crystal() {
     log_fatal "Error: Sorry, your OS is not supported."
     exit 1;
   fi
-
 }
 
 # Create new config.yml
@@ -789,9 +781,9 @@ fi
   # Remove PostgreSQL database if user ANSWER is yes
   if [[ "$RM_PostgreSQLDB" = 'y' ]]; then
     # Stop and disable invidious
-    ${SUDO} $SYSTEM_CMD stop ${SERVICE_NAME}
+    system_cmd stop ${SERVICE_NAME}
     read_sleep 1
-    ${SUDO} $SYSTEM_CMD restart ${PGSQL_SERVICE}
+    system_cmd restart ${PGSQL_SERVICE}
     read_sleep 1
     # If directory is not created
     if [[ ! -d $PGSQLDB_BAK_PATH ]]; then
@@ -831,7 +823,7 @@ fi
   fi
 
   # Reload Systemd
-  ${SUDO} $SYSTEM_CMD daemon-reload
+  system_cmd daemon-reload
   # Remove packages installed during installation
   if [[ "$RM_PACKAGES" = 'y' ]]; then
     echo ""
@@ -898,11 +890,11 @@ fi
   # Remove user and settings
   if [[ "$RM_USER" = 'y' ]]; then
     # Stop and disable invidious
-    ${SUDO} $SYSTEM_CMD stop ${SERVICE_NAME}
+    system_cmd stop ${SERVICE_NAME}
     read_sleep 1
-    ${SUDO} $SYSTEM_CMD restart ${PGSQL_SERVICE}
+    system_cmd restart ${PGSQL_SERVICE}
     read_sleep 1
-    ${SUDO} $SYSTEM_CMD daemon-reload
+    system_cmd daemon-reload
     read_sleep 1
     grep $USER_NAME /etc/passwd >/dev/null 2>&1
 
@@ -1131,10 +1123,10 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
   fi
 
   log_debug "Enabling ${PGSQL_SERVICE}"
-  run_ok "${SUDO} $SYSTEM_CMD enable ${PGSQL_SERVICE}" "Enabling ${PGSQL_SERVICE}"
+  run_ok "system_cmd enable ${PGSQL_SERVICE}" "Enabling ${PGSQL_SERVICE}"
   read_sleep 1
   log_debug "Restarting ${PGSQL_SERVICE}"
-  run_ok "${SUDO} $SYSTEM_CMD restart ${PGSQL_SERVICE}" "Restarting ${PGSQL_SERVICE}"
+  run_ok "system_cmd restart ${PGSQL_SERVICE}" "Restarting ${PGSQL_SERVICE}"
   read_sleep 1
   # Create users and set privileges
   log_debug "Creating user kemal with password $PSQLPASS"
