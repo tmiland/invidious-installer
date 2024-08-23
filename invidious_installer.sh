@@ -426,14 +426,17 @@ add_swap() {
 free=$(free -mt | grep Total | awk '{print $4}')
 if [[ "$free" -le 2048  ]]; then
   echo -e "${YELLOW}Advice: Free memory: $free MB is less than recommended to build Invidious${NORMAL}"
-  case $SWAP_OPTIONS in
-    [Yy]* )
-      add_swap
-      ;;
-    [Nn]* )
-      return 0
-      ;;
-  esac
+  while true; do
+    case $SWAP_OPTIONS in
+      [Yy]* )
+        add_swap
+        break
+        ;;
+      [Nn]* )
+        break
+        ;;
+    esac
+  done
 fi
 
 # Show service status - @FalconStats
