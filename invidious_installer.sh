@@ -53,6 +53,23 @@ cd - > /dev/null || exit
 sfp=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || greadlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
 if [ -z "$sfp" ]; then sfp=${BASH_SOURCE[0]}; fi
 #SCRIPT_DIR=$(dirname "${sfp}")
+if [[ -f /etc/debian_version ]]; then
+  DISTRO=$(cat /etc/issue.net)
+elif [[ -f /etc/redhat-release ]]; then
+  DISTRO=$(cat /etc/redhat-release)
+elif [[ -f /etc/os-release ]]; then
+  DISTRO=$(cat < /etc/os-release | grep "PRETTY_NAME" | sed 's/PRETTY_NAME=//g' | sed 's/["]//g' | awk '{print $1}')
+fi
+
+if [[ $DISTRO =~ Fedora* ]]
+then
+  if [[ $(rpm --query openssl) == "package openssl is not installed" ]]
+  then
+    echo "package openssl is not installed... Installing"
+    dnf install -y -q openssl
+  fi
+fi
+
 # Icons used for printing
 ARROW='➜'
 #WARNING='⚠'
@@ -233,14 +250,6 @@ if [ ! "${ARCH_CHK}" == 'x86_64' ]; then
 fi
 
 shopt -s nocasematch
-if [[ -f /etc/debian_version ]]; then
-  DISTRO=$(cat /etc/issue.net)
-elif [[ -f /etc/redhat-release ]]; then
-  DISTRO=$(cat /etc/redhat-release)
-elif [[ -f /etc/os-release ]]; then
-  DISTRO=$(cat < /etc/os-release | grep "PRETTY_NAME" | sed 's/PRETTY_NAME=//g' | sed 's/["]//g' | awk '{print $1}')
-fi
-
 case "$DISTRO" in
   Debian*|Ubuntu*|LinuxMint*|PureOS*|Pop*|Devuan*)
     # shellcheck disable=SC2140
@@ -325,7 +334,7 @@ if [[ $DISTRO_GROUP == "Debian" ]]; then
   pgsql_config_folder=$(find "/etc/postgresql/" -maxdepth 1 -type d -name "*" | sort -V | tail -1)
 elif [[ $(lsb_release -si) == "CentOS" ]]; then
   SUDO="sudo"
-  UPDATE="yum update -q"
+  UPDATE="yum update -y -q"
   # UPGRADE="yum upgrade -q"
   INSTALL="yum install -y -q"
   UNINSTALL="yum remove -y -q"
@@ -335,9 +344,9 @@ elif [[ $(lsb_release -si) == "CentOS" ]]; then
   # Pre-install packages
   PRE_INSTALL_PKGS="epel-release git curl sudo dnf-plugins-core"
   # Install packages
-  INSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel postgresql postgresql-server zlib-devel gcc libevent-devel"
+  INSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel postgresql postgresql-server zlib-devel gcc libevent-devel patch"
   #Uninstall packages
-  UNINSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel zlib-devel gcc libevent-devel"
+  UNINSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel zlib-devel gcc libevent-devel patch"
   # PostgreSQL Service
   PGSQL_SERVICE="postgresql"
   # System cmd
@@ -346,7 +355,7 @@ elif [[ $(lsb_release -si) == "CentOS" ]]; then
   pgsql_config_folder=$(find "/etc/postgresql/" -maxdepth 1 -type d -name "*" | sort -V | tail -1)
 elif [[ $(lsb_release -si) == "Fedora" ]]; then
   SUDO="sudo"
-  UPDATE="dnf update -q"
+  UPDATE="dnf update -y -q"
   # UPGRADE="dnf upgrade -q"
   INSTALL="dnf install -y -q"
   UNINSTALL="dnf remove -y -q"
@@ -356,9 +365,9 @@ elif [[ $(lsb_release -si) == "Fedora" ]]; then
   # Pre-install packages
   PRE_INSTALL_PKGS="git curl sudo"
   # Install packages
-  INSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel postgresql postgresql-server zlib-devel gcc libevent-devel"
+  INSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel postgresql postgresql-server zlib-devel gcc libevent-devel patch"
   #Uninstall packages
-  UNINSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel zlib-devel gcc libevent-devel"
+  UNINSTALL_PKGS="crystal openssl-devel libxml2-devel libyaml-devel gmp-devel readline-devel librsvg2-tools sqlite-devel zlib-devel gcc libevent-devel patch"
   # PostgreSQL Service
   PGSQL_SERVICE="postgresql"
   # System cmd
@@ -1117,27 +1126,26 @@ fi
   printf "${GREEN}▣▣${YELLOW}▣${CYAN}□${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}4${NORMAL}: Setup Database\\n"
 
   if [[ $DISTRO_GROUP == "RHEL" ]]; then
-    if ! ${PKGCHK} ${PGSQL_SERVICE} 1>/dev/null 2>&1; then
-      if [[ $(lsb_release -si) == "CentOS" ]]; then
-        ${SUDO} yum config-manager --set-enabled powertools >>"${RUN_LOG}" 2>&1
-        ${SUDO} dnf --enablerepo=powertools install libyaml-devel >>"${RUN_LOG}" 2>&1
-      fi
+    if [[ $(lsb_release -si) == "CentOS" ]]; then
+      ${SUDO} yum config-manager --set-enabled powertools >>"${RUN_LOG}" 2>&1
+      ${SUDO} dnf --enablerepo=powertools install libyaml-devel >>"${RUN_LOG}" 2>&1
+    fi
 
-      if [[ -d /var/lib/pgsql/data ]]; then
-        if [[ -d /var/lib/pgsql/data.bak ]]; then
-          ${SUDO} rm -rf /var/lib/pgsql/data.bak >>"${RUN_LOG}" 2>&1
-        fi
-          ${SUDO} mv -f /var/lib/pgsql/data /var/lib/pgsql/data.bak >>"${RUN_LOG}" 2>&1
-          ${SUDO} /usr/bin/postgresql-setup --initdb >>"${RUN_LOG}" 2>&1
-      else
-        ${SUDO} /usr/bin/postgresql-setup --initdb >>"${RUN_LOG}" 2>&1
+    if [[ -d /var/lib/pgsql/data ]]; then
+      if [[ -d /var/lib/pgsql/data.bak ]]; then
+        ${SUDO} rm -rf /var/lib/pgsql/data.bak >>"${RUN_LOG}" 2>&1
       fi
-      ${SUDO} chmod 775 /var/lib/pgsql/data/postgresql.conf >>"${RUN_LOG}" 2>&1
-      ${SUDO} chmod 775 /var/lib/pgsql/data/pg_hba.conf >>"${RUN_LOG}" 2>&1
-      read_sleep 1
-      ${SUDO} sed -i "s/#port = 5432/port = 5432/g" /var/lib/pgsql/data/postgresql.conf >>"${RUN_LOG}" 2>&1
-      cp -rp /var/lib/pgsql/data/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf.bak >>"${RUN_LOG}" 2>&1
-      echo "# Database administrative login by Unix domain socket
+        ${SUDO} mv -f /var/lib/pgsql/data /var/lib/pgsql/data.bak >>"${RUN_LOG}" 2>&1
+        ${SUDO} /usr/bin/postgresql-setup --initdb >>"${RUN_LOG}" 2>&1
+    else
+      ${SUDO} /usr/bin/postgresql-setup --initdb >>"${RUN_LOG}" 2>&1
+    fi
+    ${SUDO} chmod 775 /var/lib/pgsql/data/postgresql.conf >>"${RUN_LOG}" 2>&1
+    ${SUDO} chmod 775 /var/lib/pgsql/data/pg_hba.conf >>"${RUN_LOG}" 2>&1
+    read_sleep 1
+    ${SUDO} sed -i "s/#port = 5432/port = 5432/g" /var/lib/pgsql/data/postgresql.conf >>"${RUN_LOG}" 2>&1
+    cp -rp /var/lib/pgsql/data/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf.bak >>"${RUN_LOG}" 2>&1
+    echo "# Database administrative login by Unix domain socket
 local   all             postgres                                peer
 
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
@@ -1153,9 +1161,8 @@ host    all             all             ::1/128                 md5
 local   replication     all                                     peer
 host    replication     all             127.0.0.1/32            md5
 host    replication     all             ::1/128                 md5" | ${SUDO} tee /var/lib/pgsql/data/pg_hba.conf >>"${RUN_LOG}" 2>&1
-      ${SUDO} chmod 600 /var/lib/pgsql/data/postgresql.conf >>"${RUN_LOG}" 2>&1
-      ${SUDO} chmod 600 /var/lib/pgsql/data/pg_hba.conf >>"${RUN_LOG}" 2>&1
-    fi
+    ${SUDO} chmod 600 /var/lib/pgsql/data/postgresql.conf >>"${RUN_LOG}" 2>&1
+    ${SUDO} chmod 600 /var/lib/pgsql/data/pg_hba.conf >>"${RUN_LOG}" 2>&1
   fi
 
   if [[ $DISTRO_GROUP == "Arch" ]]; then
