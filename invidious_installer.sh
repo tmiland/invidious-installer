@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2059,SC1091,SC2166,SC2015,SC2129,SC2221,SC2222,SC2317,SC2086
 
-## Author: Tommy Miland (@tmiland) - Copyright (c) 2022
+## Author: Tommy Miland (@tmiland) - Copyright (c) 2024
 
 
 ######################################################################
@@ -11,13 +11,13 @@
 ####                   Maintained by @tmiland                     ####
 ######################################################################
 
-VERSION='2.1.3' # Must stay on line 14 for updater to fetch the numbers
+VERSION='2.2.1' # Must stay on line 14 for updater to fetch the numbers
 
 #------------------------------------------------------------------------------#
 #
 # MIT License
 #
-# Copyright (c) 2022 Tommy Miland
+# Copyright (c) 2024 Tommy Miland
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
