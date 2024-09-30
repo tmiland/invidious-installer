@@ -118,7 +118,7 @@ Tested and working on:
 * Ubuntu 16.04 and later
 * PureOS (Not tested)
 * CentOS 8
-* Fedora 33
+* Fedora 40
 * Arch Linux
 
 ## Feature request and bug reports
