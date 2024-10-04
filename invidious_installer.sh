@@ -53,12 +53,16 @@ cd - > /dev/null || exit
 sfp=$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || greadlink -f "${BASH_SOURCE[0]}" 2>/dev/null)
 if [ -z "$sfp" ]; then sfp=${BASH_SOURCE[0]}; fi
 #SCRIPT_DIR=$(dirname "${sfp}")
+if lsb_release -si >/dev/null 2>&1; then
+  DISTRO=$(lsb_release -si)
+else
 if [[ -f /etc/debian_version ]]; then
   DISTRO=$(cat /etc/issue.net)
 elif [[ -f /etc/redhat-release ]]; then
   DISTRO=$(cat /etc/redhat-release)
 elif [[ -f /etc/os-release ]]; then
   DISTRO=$(cat < /etc/os-release | grep "PRETTY_NAME" | sed 's/PRETTY_NAME=//g' | sed 's/["]//g' | awk '{print $1}')
+fi
 fi
 
 if [[ $DISTRO =~ Fedora* ]]
