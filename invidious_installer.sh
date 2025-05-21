@@ -435,53 +435,195 @@ add_swap() {
   read_sleep 3
 }
 
-install_inv_sig_helper() {
-  if [[ -d $USER_DIR ]]
-  then
-  echo -e "Downloading Invidious sig helper service from GitHub"
-
-  cd $USER_DIR || exit 1
+install_invidious_companion() {
+    if [[ -d $USER_DIR ]]
+    then
+    echo -e "${GREEN}${ARROW} Downloading Invidious companion from GitHub${NC}"
   
-  git clone https://github.com/iv-org/inv_sig_helper.git
-  chown -R $USER_NAME:$USER_NAME inv_sig_helper
-  cd inv_sig_helper || exit 1
-  # Install cargo / rust
-  curl -fsSL sh.rustup.rs | sh -s -- -y
-  # Source cargo
-  . "$HOME/.cargo/env"
-  # Build release
-  cargo build --release
-  # Copy service file to systemd folder
-  cp -rp $USER_DIR/inv_sig_helper/inv_sig_helper.service /etc/systemd/system/
-  # Add socket to config
-  ${SUDO} echo "signature_server: /home/invidious/tmp/inv_sig_helper.sock" >> $USER_DIR/invidious/config/config.yml
-  if [[ ! -d /home/invidious/tmp ]]
+    cd $USER_DIR || exit 1
+    
+    git clone https://github.com/iv-org/invidious-companion.git >/dev/null 2>&1
+    chown -R $USER_NAME:$USER_NAME invidious-companion
+    cd invidious-companion || exit 1
+    if command -v deno --version &> /dev/null
+    then
+      return
+    else
+      # Install deno
+      curl -fsSL https://deno.land/install.sh | sh
+    fi
+    # Compile
+    deno task compile
+
+    if ! command -v pwgen &> /dev/null
+    then
+      $SUDO $INSTALL pwgen
+    fi
+
+    domain=$(sed -n 's/.*domain *: *\([^ ]*.*\)/\1/p' "${IN_CONFIG}")
+    host_binding=$(sed -n 's/.*host_binding *: *\([^ ]*.*\)/\1/p' "${IN_CONFIG}")
+    invidious_companion_key=$(pwgen 16 1)
+    config_companion_key=$(sed -n 's/.*invidious_companion_key *: *\([^ ]*.*\)/\1/p' "${IN_CONFIG}")
+    # Add companion settings to config.yml
+echo "invidious_companion:
+  # URL used for the internal communication between invidious and invidious companion
+  - private_url: http://localhost:8282
+  # (public) URL used for the communication between your browser and invidious companion
+  # IF you are using a reverse proxy OR accessing invidious from an external IP then you NEED to change this value
+  # Please consult for more doc: https://github.com/unixfox/invidious/blob/invidious-companion/config/config.example.yml#L57-L88
+    public_url: http://localhost:8282
+invidious_companion_key: $invidious_companion_key" | ${SUDO} tee ${IN_CONFIG}
+  # Check if domain is present in config, 
+  if [ -n "$domain" ]
   then
-    ${SUDO} mkdir -p /home/invidious/tmp
-    chown -R $USER_NAME:$USER_NAME /home/invidious/tmp
+      echo "domain is not empty, adding domain to companion public_url..."
+      ${SUDO} sed -i "s/- private_url: .*/- private_url: http://$host_binding:8282" ${IN_CONFIG}
+      ${SUDO} sed -i "s/public_url: .*/public_url: https://$domain" ${IN_CONFIG}
+  else
+      echo "domain is empty, updating config for private_url..."
+      ${SUDO} sed -i "s/- private_url: .*/- private_url: http://$host_binding:8282" ${IN_CONFIG}
+      ${SUDO} sed -i "s/public_url: .*/public_url: http://$host_binding:8282" ${IN_CONFIG}
   fi
-  SERVICE_NAME=inv_sig_helper.service
-  # Enable invidious sig helper at boot
-  ${SUDO} $SYSTEM_CMD enable ${SERVICE_NAME}
-  # Reload Systemd
-  ${SUDO} $SYSTEM_CMD daemon-reload
-  # Start Invidious sig helper
-  ${SUDO} $SYSTEM_CMD start ${SERVICE_NAME}
-  if ( $SYSTEM_CMD -q is-active ${SERVICE_NAME})
+  # Check if signature server is present in config
+  signature_server=$(sed -n 's/.*signature_server *: *\([^ ]*.*\)/\1/p' "${IN_CONFIG}")
+  if [ -n "$signature_server" ]
   then
-    echo -e "Invidious sig helper service has been successfully installed!"
-    ${SUDO} $SYSTEM_CMD status ${SERVICE_NAME} --no-pager
-    echo -e "Restarting Invidious for changes to take effect..."
-    ${SUDO} $SYSTEM_CMD restart invidious
-    read_sleep 5
+    echo "signature_server was found in config, removing..."
+    sed -i '/signature_server/d' ./infile
   else
-    echo -e "Invidious sig helper service installation failed..."
-    ${SUDO} journalctl -u ${SERVICE_NAME}
-    read_sleep 5
+    echo "signature_server was not found in config, nothing to do..."
   fi
+  # Remove inv_sig_helper folder if found
+  if [[ -d $USER_DIR/inv_sig_helper ]]
+  then
+    echo "inv_sig_helper folder found, deleting..."
+    ${SUDO} rm -rf $USER_DIR/inv_sig_helper
+  fi
+  # Remove tmp folder if found
+  if [[ -d /home/invidious/tmp ]]
+  then
+    echo "inv_sig_helper tmp folder found, deleting..."
+    ${SUDO} rm -rf /home/invidious/tmp
+  fi
+  SERVICE_NAME=invidious-companion.service
+  # Add service file to systemd
+  # (Temporary service file, since none was provided in the installation guide)
+  # https://github.com/iv-org/invidious-companion/issues/3
+  echo "
+  [Unit]
+  Description=invidious_companion (Companion for Invidious which handle all the video stream retrieval from YouTube servers.)
+  After=syslog.target
+  After=network.target
+
+  [Service]
+  RestartSec=2s
+  Type=simple
+
+  User=invidious
+  Group=invidious
+
+  # allow only the strict necessary since this service runs untrusted code directly from Google
+  CapabilityBoundingSet=~CAP_SETUID CAP_SETGID CAP_SETPCAP
+  CapabilityBoundingSet=~CAP_SYS_ADMIN
+  CapabilityBoundingSet=~CAP_SYS_PTRACE
+  CapabilityBoundingSet=~CAP_CHOWN CAP_FSETID CAP_SETFCAP
+  CapabilityBoundingSet=~CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_FOWNER CAP_IPC_OWNER
+  CapabilityBoundingSet=~CAP_NET_ADMIN
+  CapabilityBoundingSet=~CAP_SYS_MODULE
+  CapabilityBoundingSet=~CAP_SYS_RAWIO
+  CapabilityBoundingSet=~CAP_SYS_TIME
+  CapabilityBoundingSet=~CAP_AUDIT_CONTROL CAP_AUDIT_READ CAP_AUDIT_WRITE
+  CapabilityBoundingSet=~CAP_KILL
+  CapabilityBoundingSet=~CAP_NET_BIND_SERVICE CAP_NET_BROADCAST CAP_NET_RAW
+  CapabilityBoundingSet=~CAP_SYSLOG
+  CapabilityBoundingSet=~CAP_SYS_NICE CAP_SYS_RESOURCE
+  CapabilityBoundingSet=~CAP_MAC_ADMIN CAP_MAC_OVERRIDE
+  CapabilityBoundingSet=~CAP_SYS_BOOT
+  CapabilityBoundingSet=~CAP_LINUX_IMMUTABLE
+  CapabilityBoundingSet=~CAP_IPC_LOCK
+  CapabilityBoundingSet=~CAP_SYS_CHROOT
+  CapabilityBoundingSet=~CAP_BLOCK_SUSPEND
+  CapabilityBoundingSet=~CAP_LEASE
+  CapabilityBoundingSet=~CAP_SYS_PACCT
+  CapabilityBoundingSet=~CAP_SYS_TTY_CONFIG
+  CapabilityBoundingSet=~CAP_WAKE_ALARM
+  LockPersonality=true
+  MemoryDenyWriteExecute=true
+  NoNewPrivileges=true
+  PrivateDevices=true
+  PrivateTmp=true
+  PrivateUsers=true
+  ProcSubset=pid
+  ProtectControlGroups=true
+  ProtectHome=tmpfs
+  ProtectHostname=true
+  ProtectKernelLogs=true
+  ProtectKernelModules=true
+  ProtectKernelTunables=true
+  ProtectProc=invisible
+  ProtectSystem=strict
+  RemoveIPC=true
+  RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+  RestrictNamespaces=true
+  RestrictSUIDSGID=true
+  RestrictRealtime=true
+  SystemCallArchitectures=native
+  SystemCallFilter=~@clock
+  SystemCallFilter=~@debug
+  SystemCallFilter=~@module
+  SystemCallFilter=~@mount
+  SystemCallFilter=~@raw-io
+  SystemCallFilter=~@reboot
+  SystemCallFilter=~@swap
+  SystemCallFilter=~@privileged
+  SystemCallFilter=~@resources
+  SystemCallFilter=~@cpu-emulation
+  SystemCallFilter=~@obsolete
+
+  BindReadOnlyPaths=/home/invidious/invidious-companion
+  BindPaths=/home/invidious/invidious-companion
+
+  WorkingDirectory=/home/invidious/invidious-companion
+  ExecStart=SERVER_SECRET_KEY=$config_companion_key /home/invidious/invidious-companion/invidious-companion
+
+  Restart=always
+
+  [Install]
+  WantedBy=multi-user.target" | tee -a /etc/systemd/system/$SERVICE_NAME
+
+  # Remove inv_sig_helper if found
+  if [[ -f /etc/systemd/system/inv_sig_helper.service ]]
+  then
+    # Stop Invidious sig helper
+    ${SUDO} $SYSTEM_CMD stop inv_sig_helper.service
+    ${SUDO} $SYSTEM_CMD disable inv_sig_helper.service
+    rm /etc/systemd/system/inv_sig_helper.service
+    # Reload Systemd
+    ${SUDO} $SYSTEM_CMD daemon-reload
+  fi
+  
+    # Enable invidious invidious-companion at boot
+    ${SUDO} $SYSTEM_CMD enable ${SERVICE_NAME}
+    # Reload Systemd
+    ${SUDO} $SYSTEM_CMD daemon-reload
+    # Start Invidious invidious-companion
+    ${SUDO} $SYSTEM_CMD start ${SERVICE_NAME}
+    if ( $SYSTEM_CMD -q is-active ${SERVICE_NAME})
+    then
+      echo -e "${GREEN}${DONE} Invidious invidious-companion service has been successfully installed!${NC}"
+      ${SUDO} $SYSTEM_CMD status ${SERVICE_NAME} --no-pager
+      echo -e "${GREEN}${DONE} Restarting Invidious for changes to take effect...${NC}"
+      ${SUDO} $SYSTEM_CMD restart invidious
+      read_sleep 5
+    else
+      echo -e "${RED}${ERROR} Invidious invidious-companion service installation failed...${NC}"
+      ${SUDO} journalctl -u ${SERVICE_NAME}
+      read_sleep 5
+    fi
   else
-    echo -e "Invidious is not installed..."
+    echo -e "${RED}${ERROR} Invidious is not installed...${NC}"
   fi
+  exit 0
 }
 
 ## get total free memory size in megabytes(MB)
@@ -1250,7 +1392,7 @@ host    replication     all             ::1/128                 md5" | ${SUDO} t
   # Not figured out why yet, so let's set permissions after as well...
   run_ok "set_permissions" "Setting folder permissions again to be sure"
   run_ok "logrotate_install" "Adding logrotate configuration"
-  run_ok "install_inv_sig_helper" "Installing Inv sig helper"
+  run_ok "install_invidious_companion" "Installing Invidious"
   log_success "Invidious Setup Finished"
 
   # Make sure the cursor is back (if spinners misbehaved)
