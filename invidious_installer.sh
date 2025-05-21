@@ -445,10 +445,8 @@ install_invidious_companion() {
     git clone https://github.com/iv-org/invidious-companion.git >/dev/null 2>&1
     chown -R $USER_NAME:$USER_NAME invidious-companion
     cd invidious-companion || exit 1
-    if command -v deno --version &> /dev/null
+    if ! command -v deno --version &> /dev/null
     then
-      return
-    else
       # Install deno
       curl -fsSL https://deno.land/install.sh | sh
     fi
@@ -464,16 +462,15 @@ install_invidious_companion() {
     host_binding=$(sed -n 's/.*host_binding *: *\([^ ]*.*\)/\1/p' "${IN_CONFIG}")
     invidious_companion_key=$(pwgen 16 1)
     config_companion_key=$(sed -n 's/.*invidious_companion_key *: *\([^ ]*.*\)/\1/p' "${IN_CONFIG}")
+    if [ -z $config_companion_key ]
+    then 
     # Add companion settings to config.yml
 echo "invidious_companion:
-  # URL used for the internal communication between invidious and invidious companion
   - private_url: http://localhost:8282
-  # (public) URL used for the communication between your browser and invidious companion
-  # IF you are using a reverse proxy OR accessing invidious from an external IP then you NEED to change this value
-  # Please consult for more doc: https://github.com/unixfox/invidious/blob/invidious-companion/config/config.example.yml#L57-L88
     public_url: http://localhost:8282
-invidious_companion_key: $invidious_companion_key" | ${SUDO} tee ${IN_CONFIG}
-  # Check if domain is present in config, 
+invidious_companion_key: $invidious_companion_key" | ${SUDO} tee -a ${IN_CONFIG}
+  fi
+  # Check if domain is present in config.yml
   if [ -n "$domain" ]
   then
       echo "domain is not empty, adding domain to companion public_url..."
@@ -489,7 +486,7 @@ invidious_companion_key: $invidious_companion_key" | ${SUDO} tee ${IN_CONFIG}
   if [ -n "$signature_server" ]
   then
     echo "signature_server was found in config, removing..."
-    sed -i '/signature_server/d' ./infile
+    sed -i '/signature_server/d' "${IN_CONFIG}"
   else
     echo "signature_server was not found in config, nothing to do..."
   fi
@@ -584,12 +581,12 @@ invidious_companion_key: $invidious_companion_key" | ${SUDO} tee ${IN_CONFIG}
   BindPaths=/home/invidious/invidious-companion
 
   WorkingDirectory=/home/invidious/invidious-companion
-  ExecStart=SERVER_SECRET_KEY=$config_companion_key /home/invidious/invidious-companion/invidious-companion
+  ExecStart=SERVER_SECRET_KEY=\"$config_companion_key\" /home/invidious/invidious-companion/invidious-companion
 
   Restart=always
 
   [Install]
-  WantedBy=multi-user.target" | tee -a /etc/systemd/system/$SERVICE_NAME
+  WantedBy=multi-user.target" | ${SUDO} tee /etc/systemd/system/$SERVICE_NAME >/dev/null 2>&1
 
   # Remove inv_sig_helper if found
   if [[ -f /etc/systemd/system/inv_sig_helper.service ]]
