@@ -3,7 +3,7 @@ name: Install Invidious
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
