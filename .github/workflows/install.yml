@@ -24,4 +24,4 @@ jobs:
           EXTERNAL_PORT:
           ADMINS:
           SWAP_OPTIONS: n
-        run: bash invidious_installer.sh --install-invidious
+        run: bash invidious_installer.sh
