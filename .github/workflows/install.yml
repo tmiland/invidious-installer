@@ -1,0 +1,27 @@
+name: Install Invidious
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: Install Invidious
+        env:
+          DOMAIN:
+          IP: localhost
+          PORT: 3000
+          PSQLDB: invidious
+          HTTPS_ONLY: n
+          EXTERNAL_PORT:
+          ADMINS:
+          SWAP_OPTIONS: n
+        run: bash invidious_installer.sh --install-invidious
