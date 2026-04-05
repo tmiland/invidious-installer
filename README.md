@@ -13,7 +13,7 @@ Automatic install script for Invidious
 ![Bash](https://img.shields.io/badge/Language-SH-4EAA25.svg?style=for-the-badge)
 
 ## Script to install [Invidious](https://github.com/iv-org/invidious)
-
+[![Install Invidious](https://github.com/tmiland/invidious-installer/actions/workflows/install.yml/badge.svg)](https://github.com/tmiland/invidious-installer/actions/workflows/install.yml)
 This script is just the install option in [Invidious-Updater](https://github.com/tmiland/Invidious-Updater)
   - Version 2.0.0 is completely re-written and has been sourced
 
