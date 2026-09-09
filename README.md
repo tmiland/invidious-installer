@@ -12,6 +12,8 @@ Automatic install script for Invidious
 [![licence](https://img.shields.io/github/license/tmiland/invidious-installer.svg?style=for-the-badge)](https://github.com/tmiland/invidious-installer/blob/master/LICENSE)
 ![Bash](https://img.shields.io/badge/Language-SH-4EAA25.svg?style=for-the-badge)
 
+
+**Full write-up on the blog:** https://tmiland.com/invidious-installer/
 ## Script to install [Invidious](https://github.com/iv-org/invidious)
 [![Install Invidious](https://github.com/tmiland/invidious-installer/actions/workflows/install.yml/badge.svg)](https://github.com/tmiland/invidious-installer/actions/workflows/install.yml)
 This script is just the install option in [Invidious-Updater](https://github.com/tmiland/Invidious-Updater)
